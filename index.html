@@ -8,9 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Jersey+10&family=Text+Me+One&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
     <style>
         :root {
             --bg: #0f172a;
@@ -18,7 +15,10 @@
             --accent: #38bdf8;
             --text: #f8fafc;
             --group1: #f87171;
-            --group2: #4ade80;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
@@ -107,7 +107,7 @@
 
         .card-front { 
             font-family: 'Jersey 10', cursive; 
-            font-size: 7.5rem; 
+            font-size: 7rem; 
             font-weight: 900; 
             text-transform: uppercase; 
             color: var(--accent); 
