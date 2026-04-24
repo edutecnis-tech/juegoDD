@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Trivia Challenge - Diseño Digital UCB</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%2338bdf8'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Jersey+10&family=Text+Me+One&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --text: #f8fafc;
+            --group1: #f87171;
+            --group2: #4ade80;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* Pantallas */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .active { display: flex; }
+
+        /* Inicio y Final */
+        h1 { font-family: 'Jersey 10', cursive; font-size: 5rem; font-weight: 400; margin-bottom: 1rem; color: var(--accent); }
+        .btn-start {
+            padding: 15px 40px;
+            font-size: 2rem;
+            font-family: 'Jersey 10', cursive;
+            font-weight: 400;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+        /* Juego */
+        #game-container {
+            perspective: 1000px;
+            width: 70%;
+            max-width: 600px;
+            height: 300px;
+            cursor: pointer;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card.flipped { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: rgba(30, 41, 59, 0.3);
+            border: 2px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(7px);
+        }
+
+        .card-front { 
+            font-family: 'Jersey 10', cursive; 
+            font-size: 9rem; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            color: var(--accent); 
+            flex-direction: column;
+        }
+        .card-back { 
+            font-family: 'Text Me One', sans-serif; 
+            font-size: 1.8rem; 
+            transform: rotateY(180deg); 
+            line-height: 1.4;
+        }
+
+        /* Marcadores */
+        #timer-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .timer-svg {
+            width: 80px;
+            height: 80px;
+        }
+
+        .timer-svg circle {
+            fill: none;
+            stroke-width: 7;
+        }
+
+        .timer-bg {
+            stroke: rgba(255,255,255,0.12);
+        }
+
+        .timer-ring {
+            stroke: var(--accent);
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            transition: stroke-dashoffset 0.1s linear;
+        }
+
+        #timer-text {
+            font-size: 1.6rem;
+            fill: var(--text);
+            font-weight: 700;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        #logo {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 80px;
+            height: auto;
+            z-index: 100;
+            opacity: 0.7;
+            border-radius: 8px;
+        }
+
+        .rules-container {
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            text-align: left;
+            background: rgba(30, 41, 59, 0.6);
+            padding: 20px 30px;
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+        
+        .rules-container ul { padding-left: 20px; }
+        
+        .btn-skip {
+            font-family: 'Jersey 10', cursive;
+            padding: 10px 30px;
+            font-size: 1.5rem;
+            background: var(--group1);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            margin-top: 30px;
+        }
+        
+        .btn-skip:hover { transform: scale(1.05); }
+        .btn-skip:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 4rem; }
+            .card-front { font-size: 5rem; }
+            .card-back { font-size: 1.4rem; padding: 20px; }
+            #game-container { width: 90%; height: 250px; }
+            #logo { width: 60px; top: 10px; right: 10px; }
+            .rules-container { width: 90%; font-size: 1rem; padding: 15px; }
+            .btn-start { font-size: 1.5rem; padding: 12px 30px; }
+            .timer-svg { width: 60px; height: 60px; }
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 3rem; }
+            .card-front { font-size: 3.5rem; }
+            .card-back { font-size: 1.1rem; }
+            #game-container { height: 200px; }
+            .rules-container h3 { font-size: 1.5rem; }
+            .btn-skip { font-size: 1.2rem; padding: 8px 20px; margin-top: 10px; }
+            .card-face { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <img src="DDUCB.jfif" alt="Logo DDUCB" id="logo">
+    <canvas id="bg-canvas"></canvas>
+
+    <div id="start-screen" class="screen active">
+        <h1>TECH TRIVIA</h1>
+        <p style="font-size: 1.2rem; margin-bottom: 20px;">Expertos en Diseño Digital</p>
+        <div class="rules-container">
+            <h3 style="margin-top: 0; color: var(--accent); font-family: 'Jersey 10', cursive; font-size: 2rem; font-weight: 400;">Reglas del Juego</h3>
+            <ul>
+                <li>Aparecerá un concepto en la pantalla.</li>
+                <li>Tendrás <strong>15 segundos</strong> para adivinar su definición.</li>
+                <li>Pasado el tiempo, la tarjeta girará automáticamente revelando la respuesta.</li>
+                <li>Si adivinas antes, presiona <strong>Revelar Respuesta</strong></li>
+            </ul>
+        </div>
+        <button class="btn-start" onclick="startGame()">EMPEZAR JUEGO</button>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <div id="timer-wrapper">
+            <svg class="timer-svg" viewBox="0 0 80 80">
+                <circle class="timer-bg" cx="40" cy="40" r="32" />
+                <circle class="timer-ring" cx="40" cy="40" r="32" />
+                <text id="timer-text" x="40" y="40"></text>
+            </svg>
+        </div>
+
+        <div id="game-container">
+            <div class="card" id="card">
+                <div class="card-face card-front">
+                    <div id="word-display">WORD</div>
+                    <button id="skip-btn" class="btn-skip" onclick="skipTimer(event)">REVELAR RESPUESTA</button>
+                </div>
+                <div class="card-face card-back" id="def-display">Definición aquí...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="end-screen" class="screen">
+        <h1>FIN DEL JUEGO</h1>
+        <p style="font-size: 1.4rem; max-width: 600px; margin: 0 auto; opacity: 0.85;">Has repasado todas las palabras. Si quieres volver a jugar, presiona reiniciar.</p>
+        <button class="btn-start" onclick="location.reload()">REINICIAR</button>
+    </div>
+
+    <script>
+        const words = [
+            {w: "PNG", d: "Formato de imagen con compresión sin pérdida que soporta transparencias (canal alfa)."},
+            {w: "Three.js", d: "Librería de JavaScript para crear y mostrar gráficos 3D animados en el navegador usando WebGL."},
+            {w: "Locomotive", d: "Librería popular para crear efectos de scroll suave (Smooth Scroll) en sitios modernos."},
+            {w: "Guttenberg", d: "El editor de bloques nativo de WordPress que revolucionó la creación de contenido."},
+            {w: "CSS", d: "Lenguaje de estilos utilizado para describir la presentación de documentos HTML."},
+            {w: "webP", d: "Formato de imagen moderno de Google que ofrece una compresión superior (30% menor que JPG)."},
+            {w: "Tilemap", d: "Mapa de celdas usado en videojuegos 2D para organizar y dibujar el nivel en una cuadrícula."},
+            {w: "JSON", d: "Formato ligero de intercambio de datos, fácil de leer para humanos y máquinas."},
+            {w: "OBJ", d: "Formato de archivo estándar para geometría 3D (puntos, líneas y caras)."},
+            {w: "Tileset", d: "Conjunto de imágenes usadas para construir los bloques repetitivos de un tilemap en videojuegos."},
+            {w: "JavaScript", d: "Lenguaje de programación fundamental de la web para crear interactividad."},
+            {w: "C Sharp", d: "Lenguaje de programación orientado a objetos usado en juegos con Unity y aplicaciones de escritorio."},
+            {w: "PHP", d: "Lenguaje de programación de servidor, motor principal de WordPress y Facebook."},
+            {w: "MySQL", d: "Sistema de gestión de bases de datos relacionales más utilizado en la web."},
+            {w: "SVG", d: "Gráficos vectoriales escalables basados en XML; no pierden calidad al ampliarlos."},
+            {w: "LocalWP", d: "Herramienta local para desarrollar sitios de WordPress de forma rápida y sencilla."},
+            {w: "Glb/gltf", d: "El 'JPEG de los 3D'. Formato eficiente para transmitir escenas y modelos 3D en la web."},
+            {w: "Lottie", d: "Formato de archivo de animación basado en JSON que permite usar animaciones de After Effects en tiempo real."},
+            {w: "Duik Angela", d: "Potente script y conjunto de herramientas gratuitas para After Effects, utilizado para el rigging y animación de personajes."},
+            {w: "Bodymovin", d: "Plugin que exporta animaciones de After Effects a JSON para usarlas con Lottie en web y apps."},
+            {w: "NGINX / Apache", d: "Los dos servidores web más populares para servir archivos y procesar solicitudes."},
+            {w: "Nombre de dominio", d: "La dirección amigable (ej: google.com) que apunta a una dirección IP de un servidor."},
+            {w: "Slider", d: "Elemento web (carrusel) que muestra múltiples imágenes o contenidos de forma cíclica."},
+            {w: "Wireframe", d: "Esquema visual simple que representa la estructura de una página web sin diseño final."},
+            {w: "Lente 35mm", d: "Objetivo fotográfico clásico, considerado cercano a la visión humana y muy versátil para narrativa visual."},
+            {w: ".cube", d: "Formato de archivo común para LUTs (Look Up Tables) utilizados en corrección de color."},
+            {w: "webM", d: "Formato de video abierto y eficiente diseñado específicamente para la web."},
+            {w: "GSAP", d: "GreenSock Animation Platform. La librería estándar de la industria para animaciones de alto rendimiento."},
+            {w: "Licencia CC0", d: "Creative Commons Zero. Contenido de dominio público, sin restricciones de derechos de autor."},
+            {w: "Atributo ALT", d: "Texto alternativo para imágenes, crucial para accesibilidad y SEO."},
+            {w: "WebGL", d: "API de JavaScript para renderizar gráficos 2D y 3D en el navegador sin plugins."},
+            {w: "TouchDesigner", d: "Entorno de programación visual basado en nodos para crear contenido multimedia interactivo en tiempo real y arte generativo."},
+            {w: "Certificado SSL", d: "Protocolo de seguridad que cifra la conexión entre el usuario y el servidor (HTTPS)."},
+            {w: "Godot", d: "Motor de videojuegos de código abierto, potente y ligero para 2D y 3D."},
+            {w: "ISO", d: "Sensibilidad del sensor de la cámara a la luz. Valores altos captan más luz pero introducen ruido digital o grano."},
+            {w: "Game engine", d: "Software que proporciona herramientas y runtime para crear videojuegos más fácilmente."},
+            {w: "Juego TopDown", d: "Juego con cámara desde arriba donde el personaje se mueve en un plano horizontal."},
+            {w: "OrbitControls", d: "Script de Three.js que permite al usuario rotar, mover y hacer zoom en una escena 3D."},
+            {w: "RoyaltyFree", d: "Recursos que se pueden usar legalmente tras un pago único o de forma gratuita sin pagar regalías."},
+            {w: "FBX", d: "Formato de intercambio 3D propiedad de Autodesk, muy usado en videojuegos."},
+            {w: "RigidBody", d: "Objeto físico en un motor de física que se mueve con inercia y responde a fuerzas como gravedad y choques."},
+            {w: "Collider", d: "Componente invisible que define la forma de colisión de un objeto en un juego."},
+            {w: "Benchmarking", d: "Proceso de comparar el rendimiento de tu sitio o producto con la competencia."},
+            {w: "CTA", d: "Call To Action. Botón o frase diseñada para provocar una respuesta inmediata del usuario."},
+            {w: "DPI/PPP", d: "Puntos por pulgada. Medida de resolución de impresión y densidad de pantallas."},
+            {w: "Códec v9", d: "Códec de compresión de video de Google (VP9) usado para streaming de alta calidad en YouTube."},
+            {w: "UX/UI", d: "User Experience y User Interface. El equilibrio entre cómo funciona y cómo se ve un producto."},
+            {w: ".FIG", d: "Extensión de archivo nativa de Figma, la herramienta líder en diseño de interfaces."},
+            {w: "Padding", d: "Espacio interno de un elemento, entre su contenido y su borde."},
+            {w: "Iconografía", d: "Conjunto de iconos que ayudan a la navegación y comunicación visual sin texto."},
+            {w: "CDN", d: "Content Delivery Network. Red de servidores distribuidos que aceleran la entrega de contenido web."},
+            {w: "Hosting", d: "Servicio de alojamiento donde residen los archivos de tu sitio web para estar en línea."},
+            {w: "React", d: "Biblioteca de JavaScript para construir interfaces de usuario basadas en componentes."},
+            {w: "LiveServer", d: "Extensión que crea un servidor local con recarga automática al guardar cambios en el código."},
+            {w: "Estado Idle", d: "Estado en que un personaje o entidad está quieto, esperando acción del jugador."},
+            {w: "ChromaKey", d: "Técnica de postproducción para sustituir un fondo de color sólido (verde/azul) por otro."},
+            {w: "Obturación", d: "Tiempo que el sensor de la cámara está expuesto a la luz, controlando la captura del movimiento (motion blur)."},
+            {w: "CMS", d: "Content Management System (ej: WordPress). Sistema para gestionar contenidos web fácilmente."},
+            {w: "LMS", d: "Learning Management System (ej: Moodle). Plataforma para administrar cursos online."},
+            {w: "SEO", d: "Search Engine Optimization. Optimización para aparecer en los primeros resultados de búsqueda."},
+            {w: "Sprite", d: "Imagen que contiene múltiples imágenes pequeñas, usada en juegos o para optimizar carga web."},
+            {w: "Hitbox", d: "Área invisible que define la zona de colisión o impacto de un personaje u objeto."},
+            {w: ".DRP", d: "Extensión de archivo de proyecto de DaVinci Resolve."},
+            {w: "Easing", d: "La aceleración o desaceleración en una animación (entrada/salida suave)."},
+            {w: "HSL", d: "Hue, Saturation, Lightness. Una forma intuitiva de definir colores en diseño y CSS."},
+            {w: "Parallax", d: "Efecto visual donde el fondo se mueve a una velocidad distinta que el primer plano."},
+            {w: "Matte Painting", d: "Técnica VFX que consiste en crear escenarios virtuales o paisajes pintados digitalmente para integrarlos con metraje real."},
+            {w: "Moodboard", d: "Muro de inspiración visual con referencias de color, tipografía y estilo antes de diseñar."},
+            {w: "AR", d: "Augmented Reality (Realidad Aumentada). Superponer elementos digitales al mundo real."},
+            {w: "MindAr", d: "Tecnología que combina inteligencia artificial y realidad aumentada para experiencias interactivas."},
+            {w: "AppleProRes", d: "Códec de video de alta calidad para edición profesional con pérdida mínima."},
+            {w: "Libería dinámica", d: "Conjunto de funciones externas que un programa carga solo cuando las necesita."},
+            {w: "h264/h265", d: "Estándares de compresión de video más usados. H265 es el sucesor más eficiente (HEVC High Efficiency Video Coding)."},
+            {w: "Hexadecimal", d: "Sistema numérico base 16 usado en web para definir colores (ej: #FF5500)."},
+            {w: "Canal Alpha", d: "Canal de datos que define el grado de transparencia de un píxel."},
+            {w: "Hotspot", d: "Punto interactivo en una imagen o escena 3D que activa una acción al hacer clic."},
+            {w: "Etalonaje", d: "Proceso artístico de corrección de color para darle una narrativa visual al video."},
+            {w: "Isotipo / logotipo / isologo", d: "Diferentes formas de representar una marca (solo icono, solo texto o ambos combinados)."},
+            {w: "Flat Design", d: "Estilo de diseño minimalista que evita sombras, texturas o efectos 3D realistas."},
+            {w: "Píxel Art", d: "Forma de arte digital donde las imágenes se crean a nivel de píxeles individuales."},
+            {w: "Asset", d: "Cualquier recurso digital (modelo 3D, sonido, imagen) usado en un proyecto."},
+            {w: "Isologo", d: "Representación visual de una marca donde el texto y el icono gráfico están fusionados y no pueden funcionar por separado."},
+            {w: "VFX", d: "Visual Effects. Efectos creados digitalmente para cine, video o juegos."},
+            {w: "EEVEE", d: "Motor de renderizado en tiempo real de Blender basado en la tecnología de videojuegos."},
+            {w: "API", d: "Application Programming Interface. Interfaz que permite que dos aplicaciones se comuniquen."},
+            {w: "WAV/AIFF", d: "Formatos de audio profesionales sin compresión (máxima calidad)."},
+            {w: "WEBFONT", d: "Fuentes optimizadas para cargarse dinámicamente en sitios web (ej: WOFF2)."},
+            {w: "Node Based", d: "Interfaz de trabajo basada en nodos conectados (común en Blender, DaVinci y Unreal)."},
+            {w: "Favicon", d: "Pequeño icono que aparece en la pestaña del navegador junto al título del sitio."},
+            {w: "Sonido 8D", d: "Efecto de audio envolvente que da la sensación de que el sonido se mueve alrededor de la cabeza."},
+            {w: "GITHUB", d: "Plataforma de alojamiento para control de versiones y colaboración de código usando Git."},
+            {w: "Pipeline", d: "Flujo de trabajo o cadena de procesos técnicos y artísticos interconectados en una producción de software, animación o VFX."},
+            {w: "RAW", d: "Formato de archivo digital sin procesar ni comprimir, que conserva todos los datos captados por el sensor de la cámara."},
+            {w: "ShapeKeys", d: "Técnica de animación 3D (como en Blender) que permite guardar variaciones de una malla, ideal para expresiones faciales."},
+            {w: "Morph", d: "Efecto especial de animación que transforma suave y progresivamente una imagen o forma en otra diferente."},
+            {w: "Mixamo", d: "Plataforma web de Adobe que ofrece personajes 3D y permite aplicarles rigs y animaciones de forma automática."},
+            {w: "HDRI", d: "High Dynamic Range Image. Imagen panorámica que contiene información lumínica real, muy usada para iluminar entornos 3D."},
+            {w: "Shading", d: "Proceso en gráficos 3D que define cómo los materiales interactúan con la luz (color, brillo, texturas y sombras)."},
+            {w: "Medida REM", d: "Unidad de medida CSS relativa al tamaño de fuente del elemento raíz, ideal para diseño responsive."},
+            {w: "Juego 8 Bits", d: "Videojuego creado con gráficos pixelados de 8 bits, estilo retro de consolas antiguas como NES."},
+            {w: "Rigging", d: "Proceso de crear un esqueleto digital para un modelo 3D que permite animarlo con movimientos realistas."},
+            {w: "Elementor", d: "Constructor visual de WordPress que permite crear páginas web sin escribir código usando drag-and-drop."},
+            {w: "Spectra", d: "Plugin de WordPress que proporciona componentes avanzados para diseño y personalización de bloques."},
+            {w: "SSL", d: "Secure Sockets Layer. Protocolo de seguridad que cifra datos entre servidor y cliente (ahora usando TLS)."},
+            {w: "YoastSEO", d: "Plugin de WordPress que optimiza el contenido para buscadores, análisis de palabras clave y readability."},
+            {w: "Permalink", d: "URL permanente de una página o post que no cambia, importante para SEO y referencias externas."},
+            {w: "Excerpt", d: "Resumen breve de un post en WordPress que aparece en listas o previsualizaciones de contenido."},
+            {w: "H1-H6", d: "Etiquetas HTML que definen los encabezados, siendo H1 el más importante y H6 el menor en jerarquía."},
+            {w: "Google Analytics", d: "Herramienta de Google para rastrear y analizar el tráfico, comportamiento de usuarios y conversiones."},
+            {w: "Schema", d: "Marcado estructurado (JSON-LD) que ayuda a los buscadores a entender mejor el contenido de una página."},
+            {w: "Twitter Card", d: "Protocolo que define cómo se ve un enlace compartido en Twitter con título, imagen y descripción."},
+            {w: "Claude Code", d: "Asistente IA de Anthropic que ayuda con programación, análisis y generación de código."},
+            {w: "Scrollytelling", d: "Técnica narrativa web que sincroniza animaciones y contenido con el scroll del usuario para contar historias."},
+            {w: "FontAwesome", d: "Biblioteca de iconos vectoriales ampliamente usada en web para añadir símbolos y signos visuales."},
+            {w: "Google PageSpeed Insights", d: "Herramienta de Google que analiza la velocidad y rendimiento de una página web en desktop y móvil."},
+            {w: "Meta información", d: "Datos en el HEAD del HTML como meta description y meta keywords que los buscadores utilizan."},
+            {w: "Marketing de contenidos", d: "Estrategia que usa contenido relevante y valioso para atraer, mantener y convertir una audiencia clara."},
+            {w: "Font Atlas", d: "Imagen que contiene múltiples caracteres de una fuente, usada para renderizado eficiente de texto en 3D."},
+            {w: "Font Noto", d: "Familia de fuentes de Google que soporta casi todos los idiomas del mundo con excelente cobertura unicode."},
+            {w: "Marcador Hiro", d: "Código QR especial en realidad aumentada que sirve como punto de referencia para rastrear objetos 3D."},
+            {w: "VR Lenses", d: "Lentes ópticas especiales en cascos VR que distorsionan la imagen para crear efecto de campo visual amplio."},
+            {w: "AR Geolocalización", d: "Tecnología que combina realidad aumentada con ubicación GPS para superponer contenido en el mundo real."},
+            {w: "Equirectangular", d: "Formato de imagen 360° que representa una esfera completa, usado en fotografía panorámica y VR."},
+            {w: "Cámara ortográfica", d: "Tipo de proyección 3D sin perspectiva donde objetos mantienen tamaño independiente de su distancia."},
+            {w: "WebGPU", d: "API moderna de JavaScript para acceso de bajo nivel a la GPU, sucesor de WebGL con mejor rendimiento."}
+        ];
+
+        let currentIndex = 0;
+        const timerDuration = 15;
+        const revealDuration = 7;
+        let timerAnimationId = null;
+        let revealTimeoutId = null;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        const timerCircle = { element: null, radius: 32, circumference: 2 * Math.PI * 32 };
+
+        function playSound(freq, type = 'sine', duration = 0.1) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('game-screen').classList.add('active');
+            timerCircle.element = document.querySelector('.timer-ring');
+            timerCircle.element.style.strokeDasharray = timerCircle.circumference;
+            shuffleArray(words);
+            showWord();
+            playSound(440, 'triangle', 0.2);
+        }
+
+        function showWord() {
+            clearTimers();
+            const card = document.getElementById('card');
+            card.classList.remove('flipped');
+            document.getElementById('word-display').innerText = words[currentIndex].w;
+            document.getElementById('def-display').innerText = words[currentIndex].d;
+            document.getElementById('skip-btn').disabled = false;
+            updateTimerUI(timerDuration);
+            startTimer();
+        }
+
+        function skipTimer(event) {
+            if (event) event.stopPropagation();
+            if (document.getElementById('card').classList.contains('flipped')) return;
+            document.getElementById('skip-btn').disabled = true;
+            revealAnswer();
+        }
+
+        function startTimer() {
+            const startTime = performance.now();
+
+            function tick(now) {
+                const elapsed = (now - startTime) / 1000;
+                const remaining = Math.max(0, timerDuration - elapsed);
+                updateTimerUI(remaining);
+
+                if (remaining <= 0) {
+                    revealAnswer();
+                } else {
+                    timerAnimationId = requestAnimationFrame(tick);
+                }
+            }
+
+            timerAnimationId = requestAnimationFrame(tick);
+        }
+
+        function updateTimerUI(seconds) {
+            const timerText = document.getElementById('timer-text');
+            const rounded = Math.ceil(seconds);
+            timerText.innerText = rounded;
+            const offset = timerCircle.circumference * (1 - seconds / timerDuration);
+            timerCircle.element.style.strokeDashoffset = offset.toFixed(2);
+        }
+
+        function revealAnswer() {
+            clearTimers();
+            document.getElementById('skip-btn').disabled = true;
+            const card = document.getElementById('card');
+            card.classList.add('flipped');
+            playSound(600, 'sine', 0.15);
+            revealTimeoutId = setTimeout(() => {
+                nextWord();
+            }, revealDuration * 1000);
+        }
+
+        function nextWord() {
+            if (currentIndex < words.length - 1) {
+                currentIndex++;
+                showWord();
+                playSound(800, 'sine', 0.1);
+            } else {
+                showEnd();
+            }
+        }
+
+        function clearTimers() {
+            if (timerAnimationId) {
+                cancelAnimationFrame(timerAnimationId);
+                timerAnimationId = null;
+            }
+            if (revealTimeoutId) {
+                clearTimeout(revealTimeoutId);
+                revealTimeoutId = null;
+            }
+        }
+
+        function showEnd() {
+            clearTimers();
+            document.getElementById('game-screen').classList.remove('active');
+            document.getElementById('end-screen').classList.add('active');
+            playSound(523.25, 'sine', 0.5);
+        }
+
+        // Three.js Background Animation
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const particleCount = 500;
+        const velocities = [];
+        const trails = [];
+        const trailLength = 50; // Increased for more noticeable trails
+
+        const tetraGeometry = new THREE.TetrahedronGeometry(0.05); // Small tetrahedrons
+        const tetraMaterial = new THREE.MeshBasicMaterial(); // Will set color per instance
+        const instancedMesh = new THREE.InstancedMesh(tetraGeometry, tetraMaterial, particleCount);
+        scene.add(instancedMesh);
+
+        const dummy = new THREE.Object3D();
+
+        function getParticleColor(type) {
+            if (type === 'cyan') return new THREE.Color().setHSL(190 / 360, 1, 0.5);
+            if (type === 'lilas') return new THREE.Color().setHSL(300 / 360, 1, 0.5);
+            if (type === 'plata') return new THREE.Color(0.7, 0.7, 0.7); // Silver gray
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            const colorType = ['cyan', 'lilas', 'plata'][Math.floor(Math.random() * 3)];
+            velocities.push({
+                x: (Math.random() - 0.5) * 0.02,
+                y: (Math.random() - 0.5) * 0.02,
+                z: (Math.random() - 0.5) * 0.02,
+                colorType: colorType,
+                history: []
+            });
+
+            // Trail
+            const trailPositions = new Float32Array(trailLength * 3);
+            const trailColors = new Float32Array(trailLength * 3);
+            const trailGeometry = new THREE.BufferGeometry();
+            trailGeometry.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+            trailGeometry.setAttribute('color', new THREE.BufferAttribute(trailColors, 3));
+            const trailMaterial = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1 }); // More opaque for noticeable trails
+            const trail = new THREE.Line(trailGeometry, trailMaterial);
+            scene.add(trail);
+            trails.push(trail);
+
+            // Initial position and scale
+            const scale = Math.random() * 0.8 + 0.2; // Random scale between 0.2 and 1.0
+            dummy.position.set((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
+            dummy.scale.set(scale, scale, scale);
+            dummy.updateMatrix();
+            instancedMesh.setMatrixAt(i, dummy.matrix);
+            const initialColor = getParticleColor(velocities[i].colorType);
+            instancedMesh.setColorAt(i, initialColor);
+            velocities[i].history.push(dummy.position.clone());
+        }
+
+        instancedMesh.instanceMatrix.needsUpdate = true;
+        instancedMesh.instanceColor.needsUpdate = true;
+
+        camera.position.z = 5;
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Constant rotation of the particle system
+            scene.rotation.y += 0.005;
+
+            for (let i = 0; i < particleCount; i++) {
+                const velocity = velocities[i];
+
+                // Get current position from instance matrix
+                instancedMesh.getMatrixAt(i, dummy.matrix);
+                dummy.position.setFromMatrixPosition(dummy.matrix);
+
+                velocity.history.unshift(dummy.position.clone());
+                if (velocity.history.length > trailLength) velocity.history.pop();
+
+                // Update position
+                dummy.position.x += velocity.x;
+                dummy.position.y += velocity.y;
+                dummy.position.z += velocity.z;
+
+                // Update color
+                const color = getParticleColor(velocity.colorType);
+                instancedMesh.setColorAt(i, color);
+
+                // Update trail
+                const trail = trails[i];
+                const trailPosAttr = trail.geometry.attributes.position;
+                const trailColorAttr = trail.geometry.attributes.color;
+                for (let j = 0; j < trailLength; j++) {
+                    const pos = velocity.history[j];
+                    if (pos) {
+                        trailPosAttr.array[j * 3] = pos.x;
+                        trailPosAttr.array[j * 3 + 1] = pos.y;
+                        trailPosAttr.array[j * 3 + 2] = pos.z;
+                        const alpha = Math.max(0.3, (trailLength - j) / trailLength); // Minimum alpha for more noticeable trails
+                        const trailColor = color.clone().multiplyScalar(alpha);
+                        trailColorAttr.array[j * 3] = trailColor.r;
+                        trailColorAttr.array[j * 3 + 1] = trailColor.g;
+                        trailColorAttr.array[j * 3 + 2] = trailColor.b;
+                    }
+                }
+                trailPosAttr.needsUpdate = true;
+                trailColorAttr.needsUpdate = true;
+
+                // Boundary
+                if (Math.abs(dummy.position.x) > 10) velocity.x *= -1;
+                if (Math.abs(dummy.position.y) > 10) velocity.y *= -1;
+                if (Math.abs(dummy.position.z) > 10) velocity.z *= -1;
+
+                // Update instance matrix
+                dummy.updateMatrix();
+                instancedMesh.setMatrixAt(i, dummy.matrix);
+            }
+
+            instancedMesh.instanceMatrix.needsUpdate = true;
+            instancedMesh.instanceColor.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
