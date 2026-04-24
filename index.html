@@ -65,10 +65,10 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
             transition: transform 0.2s;
         }
         .btn-start:hover { transform: scale(1.05); }
+        .btn-start:active { transform: scale(0.95); }
 
         /* Juego */
         #game-container {
@@ -84,10 +84,16 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
         }
 
+        .card:hover {
+            box-shadow: 0 15px 40px rgba(136, 65, 249, 0.15);
+        }
+
+        .card:active { transform: scale(0.98); }
         .card.flipped { transform: rotateY(180deg); }
+        .card.flipped:active { transform: rotateY(180deg) scale(0.98); }
 
         .card-face {
             position: absolute;
@@ -107,12 +113,13 @@
 
         .card-front { 
             font-family: 'Jersey 10', cursive; 
-            font-size: 7rem; 
+            font-size: clamp(3rem, 8vw, 6rem); 
             font-weight: 900; 
             text-transform: uppercase; 
             color: var(--accent); 
             flex-direction: column;
             text-shadow: 4px 4px 0px #520089;
+            text-align: center;
         }
         .card-back { 
             font-family: 'Text Me One', sans-serif; 
@@ -151,6 +158,16 @@
             transform-origin: center;
             transition: stroke-dashoffset 0.1s linear;
         }
+        
+        @keyframes pulse-danger {
+            0%, 100% { filter: drop-shadow(0 0 2px var(--group1)); }
+            50% { filter: drop-shadow(0 0 12px var(--group1)); }
+        }
+
+        .timer-ring.danger {
+            stroke: var(--group1);
+            animation: pulse-danger 1s infinite;
+        }
 
         #timer-text {
             font-size: 1.6rem;
@@ -158,6 +175,7 @@
             font-weight: 700;
             text-anchor: middle;
             dominant-baseline: central;
+            transition: fill 0.3s;
         }
 
         #logo {
@@ -169,7 +187,12 @@
             z-index: 100;
             opacity: 0.7;
             border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
         }
+
+        #logo:hover { transform: scale(1.05); opacity: 1; }
+        #logo:active { transform: scale(0.95); }
 
         .rules-container {
             max-width: 600px;
@@ -200,6 +223,7 @@
         }
         
         .btn-skip:hover { transform: scale(1.05); }
+        .btn-skip:active { transform: scale(0.95); }
         .btn-skip:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
         @media (max-width: 768px) {
@@ -225,7 +249,7 @@
     </style>
 </head>
 <body>
-    <img src="DDUCB.jfif" alt="Logo DDUCB" id="logo">
+    <img src="DDUCB.jfif" alt="Logo DDUCB" id="logo" onclick="location.reload()" title="Volver al inicio">
     <canvas id="bg-canvas"></canvas>
 
     <div id="start-screen" class="screen active">
@@ -262,7 +286,7 @@
             <div class="card" id="card" onclick="handleCardClick()">
                 <div class="card-face card-front">
                     <div id="word-display">WORD</div>
-                    <button id="skip-btn" class="btn-skip" onclick="skipTimer(event)">REVELAR RESPUESTA</button>
+                    <button id="skip-btn" class="btn-skip" onclick="skipTimer(event)">RESPUESTA</button>
                 </div>
                 <div class="card-face card-back" id="def-display">Definición aquí...</div>
             </div>
@@ -409,6 +433,7 @@
         const revealDuration = 7;
         let timerAnimationId = null;
         let revealTimeoutId = null;
+        let lastDangerSecond = -1;
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         const timerCircle = { element: null, radius: 32, circumference: 2 * Math.PI * 32 };
@@ -493,6 +518,20 @@
             timerText.innerText = rounded;
             const offset = timerCircle.circumference * (1 - seconds / timerDuration);
             timerCircle.element.style.strokeDashoffset = offset.toFixed(2);
+            
+            if (rounded <= 5 && rounded > 0) {
+                timerCircle.element.classList.add('danger');
+                timerText.style.fill = 'var(--group1)';
+                
+                if (lastDangerSecond !== rounded) {
+                    playSound(400, 'triangle', 0.1); // Sonido sutil de advertencia
+                    lastDangerSecond = rounded;
+                }
+            } else {
+                timerCircle.element.classList.remove('danger');
+                timerText.style.fill = 'var(--text)';
+                lastDangerSecond = -1;
+            }
         }
 
         function revealAnswer() {
