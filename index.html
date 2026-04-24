@@ -253,7 +253,7 @@
     <canvas id="bg-canvas"></canvas>
 
     <div id="start-screen" class="screen active">
-        <h1>TECH TRIVIA</h1>
+        <h1 style="opacity: 0; pointer-events: none;">TECH TRIVIA</h1>
         <p style="font-size: 1.2rem; margin-bottom: 20px;">Expertos en Diseño Digital</p>
         <div class="rules-container">
             <h3 style="margin-top: 0; color: var(--accent); font-family: 'Jersey 10', cursive; font-size: 2rem; font-weight: 400;">Reglas del Juego</h3>
@@ -584,10 +584,14 @@
         const trails = [];
         const trailLength = 50; // Increased for more noticeable trails
 
+        // Agrupar partículas para separarlas de los elementos estáticos (como el texto)
+        const particleGroup = new THREE.Group();
+        scene.add(particleGroup);
+
         const tetraGeometry = new THREE.TetrahedronGeometry(0.05); // Small tetrahedrons
         const tetraMaterial = new THREE.MeshBasicMaterial(); // Will set color per instance
         const instancedMesh = new THREE.InstancedMesh(tetraGeometry, tetraMaterial, particleCount);
-        scene.add(instancedMesh);
+        particleGroup.add(instancedMesh);
 
         const dummy = new THREE.Object3D();
 
@@ -615,7 +619,7 @@
             trailGeometry.setAttribute('color', new THREE.BufferAttribute(trailColors, 3));
             const trailMaterial = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1 }); // More opaque for noticeable trails
             const trail = new THREE.Line(trailGeometry, trailMaterial);
-            scene.add(trail);
+            particleGroup.add(trail);
             trails.push(trail);
 
             // Initial position and scale
@@ -632,13 +636,75 @@
         instancedMesh.instanceMatrix.needsUpdate = true;
         instancedMesh.instanceColor.needsUpdate = true;
 
+        // Luces para el material del texto 3D
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(0, 10, 10);
+        scene.add(dirLight);
+
+        // Cargar fuente y crear Texto 3D
+        let textGroup;
+        const fontLoader = new THREE.FontLoader();
+        fontLoader.load('https://unpkg.com/three@0.128.0/examples/fonts/optimer_bold.typeface.json', function(font) {
+            const textGeo = new THREE.TextGeometry('TECH TRIVIA', {
+                font: font,
+                size: 0.5,
+                height: 0.15, // Nivel de extrusión (profundidad 3D)
+                curveSegments: 12,
+                bevelEnabled: true,
+                bevelThickness: 0.02,
+                bevelSize: 0.01,
+                bevelOffset: 0,
+                bevelSegments: 5
+            });
+            textGeo.computeBoundingBox();
+            const centerOffset = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
+            
+            const textMat = new THREE.MeshPhongMaterial({ color: 0x8841f9, specular: 0xffffff, shininess: 50 });
+            const textMesh = new THREE.Mesh(textGeo, textMat);
+            textMesh.position.x = centerOffset;
+            
+            textGroup = new THREE.Group();
+            textGroup.add(textMesh);
+            textGroup.position.z = 2; // Acercarlo a la cámara
+            scene.add(textGroup);
+        });
+
         camera.position.z = 5;
 
         function animate() {
             requestAnimationFrame(animate);
 
             // Constant rotation of the particle system
-            scene.rotation.y += 0.005;
+            particleGroup.rotation.y += 0.005;
+
+            // Animar y posicionar el texto 3D
+            if (textGroup) {
+                const time = Date.now() * 0.001;
+                // Rotación ligera y constante (flotación)
+                textGroup.rotation.y = Math.sin(time) * 0.15; 
+                textGroup.rotation.x = Math.cos(time * 0.8) * 0.1;
+                
+                // Escalar y posicionar usando los mismos breakpoints del CSS (Responsividad)
+                let scaleBase, yPos;
+                if (window.innerWidth <= 480) {
+                    scaleBase = 0.45;
+                    yPos = 1.4;
+                } else if (window.innerWidth <= 768) {
+                    scaleBase = 0.65;
+                    yPos = 1.2;
+                } else {
+                    scaleBase = 0.9;
+                    yPos = 1.0;
+                }
+                
+                textGroup.scale.set(scaleBase, scaleBase, scaleBase);
+                textGroup.position.y = yPos;
+
+                // Mostrar el texto 3D solo cuando la pantalla de inicio está activa
+                textGroup.visible = document.getElementById('start-screen').classList.contains('active');
+            }
 
             for (let i = 0; i < particleCount; i++) {
                 const velocity = velocities[i];
