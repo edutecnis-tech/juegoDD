@@ -12,9 +12,9 @@
         :root {
             --bg: #0f172a;
             --card-bg: #1e293b;
-            --accent: #38bdf8;
+            --accent: #8841f9;
             --text: #f8fafc;
-            --group1: #f87171;
+            --group1: #e22e61;
         }
 
         * {
@@ -144,7 +144,7 @@
         }
 
         .timer-ring {
-            stroke: var(--accent);
+            stroke: url(#timerGradient);
             stroke-linecap: round;
             transform: rotate(-90deg);
             transform-origin: center;
@@ -245,6 +245,12 @@
     <div id="game-screen" class="screen">
         <div id="timer-wrapper">
             <svg class="timer-svg" viewBox="0 0 80 80">
+                <defs>
+                    <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8" />
+                        <stop offset="100%" stop-color="#8b008b" />
+                    </linearGradient>
+                </defs>
                 <circle class="timer-bg" cx="40" cy="40" r="32" />
                 <circle class="timer-ring" cx="40" cy="40" r="32" />
                 <text id="timer-text" x="40" y="40"></text>
@@ -252,7 +258,7 @@
         </div>
 
         <div id="game-container">
-            <div class="card" id="card">
+            <div class="card" id="card" onclick="handleCardClick()">
                 <div class="card-face card-front">
                     <div id="word-display">WORD</div>
                     <button id="skip-btn" class="btn-skip" onclick="skipTimer(event)">REVELAR RESPUESTA</button>
@@ -452,6 +458,14 @@
             if (document.getElementById('card').classList.contains('flipped')) return;
             document.getElementById('skip-btn').disabled = true;
             revealAnswer();
+        }
+
+        function handleCardClick() {
+            const card = document.getElementById('card');
+            if (card.classList.contains('flipped')) {
+                clearTimers();
+                nextWord();
+            }
         }
 
         function startTimer() {
