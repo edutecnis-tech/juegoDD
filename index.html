@@ -8,6 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Jersey+10&family=Text+Me+One&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/split-type"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
         :root {
             --bg: #0f172a;
@@ -30,6 +33,19 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+        }
+
+        /* Viñeta roja para los bordes de la pantalla (estilo HUD de videojuego) */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Evita que bloquee los clics del usuario */
+            z-index: 50;
+            box-shadow: inset 0 0 0px transparent;
+        }
+        body.danger-vignette::after {
+            animation: vignette-pulse 1s ease-in-out infinite both;
         }
 
         #bg-canvas {
@@ -75,7 +91,7 @@
             perspective: 1000px;
             width: 70%;
             max-width: 600px;
-            height: 300px;
+            height: 380px;
             cursor: pointer;
         }
 
@@ -113,7 +129,7 @@
 
         .card-front { 
             font-family: 'Jersey 10', cursive; 
-            font-size: clamp(3rem, 8vw, 6rem); 
+            font-size: clamp(2rem, 8vw, 5rem); 
             font-weight: 900; 
             text-transform: uppercase; 
             color: var(--accent); 
@@ -121,11 +137,45 @@
             text-shadow: 4px 4px 0px #520089;
             text-align: center;
         }
+        
+        /* Fondos alternos para la cara frontal (con degradados sutiles y oscuros) */
+        .card-face.bg-gradient-1 {
+            background: linear-gradient(135deg, rgba(217, 70, 239, 0.15), rgba(56, 189, 248, 0.15), rgba(30, 58, 138, 0.3));
+        }
+        .card-face.bg-gradient-2 {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.3), rgba(56, 189, 248, 0.15), rgba(217, 70, 239, 0.15));
+        }
+        
         .card-back { 
             font-family: 'Text Me One', sans-serif; 
             font-size: 1.8rem; 
             transform: rotateY(180deg); 
             line-height: 1.4;
+            border-color: transparent;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        /* Pseudo-elemento para el borde con degradado animado */
+        .card-back::before {
+            content: '';
+            position: absolute;
+            inset: -2px; /* Se expande para cubrir el área del borde transparente */
+            border-radius: 22px; /* Radio de la tarjeta (20) + grosor del borde (2) */
+            padding: 2px; /* El grosor del nuevo borde de degradado */
+            background: linear-gradient(60deg, #38bdf8, #d946ef, #1e3a8a, #d946ef, #38bdf8);
+            background-size: 300% 300%;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            animation: border-gradient-anim 4s ease-in-out infinite;
+        }
+
+        @keyframes border-gradient-anim {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* Marcadores */
@@ -230,7 +280,7 @@
             h1 { font-size: 4rem; }
             .card-front { font-size: 5rem; }
             .card-back { font-size: 1.4rem; padding: 20px; }
-            #game-container { width: 90%; height: 250px; }
+            #game-container { width: 90%; height: 320px; }
             #logo { width: 60px; top: 10px; right: 10px; }
             .rules-container { width: 90%; font-size: 1rem; padding: 15px; }
             .btn-start { font-size: 1.5rem; padding: 12px 30px; }
@@ -241,7 +291,7 @@
             h1 { font-size: 3rem; }
             .card-front { font-size: 3.5rem; }
             .card-back { font-size: 1.1rem; }
-            #game-container { height: 200px; }
+            #game-container { height: 300px; }
             .rules-container h3 { font-size: 1.5rem; }
             .btn-skip { font-size: 1.2rem; padding: 8px 20px; margin-top: 10px; }
             .card-face { padding: 20px; }
@@ -258,6 +308,20 @@
         .glitch-active {
             animation: screen-glitch 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
         }
+
+        @keyframes subtle-danger-pulse {
+            0%, 100% { filter: sepia(0) hue-rotate(0deg) saturate(1) contrast(1); transform: scale(1) rotate(0deg); }
+            50% { filter: sepia(0.8) hue-rotate(-50deg) saturate(2.5) contrast(1.15); transform: scale(1.03) rotate(0.5deg); }
+        }
+        .danger-glitch {
+            /* Efecto detallado: micro-rotación (vértigo) y mayor contraste */
+            animation: subtle-danger-pulse 1s ease-in-out infinite both;
+        }
+
+        @keyframes vignette-pulse {
+            0%, 100% { box-shadow: inset 0 0 50px rgba(226, 46, 73, 0.1); }
+            50% { box-shadow: inset 0 0 180px rgba(226, 46, 73, 0.45); }
+        }
     </style>
 </head>
 <body>
@@ -266,14 +330,14 @@
 
     <div id="start-screen" class="screen active">
         <h1 style="opacity: 0; pointer-events: none;">TECH TRIVIA</h1>
-        <p style="font-size: 1.2rem; margin-bottom: 20px;">Expertos en Diseño Digital</p>
         <div class="rules-container">
             <h3 style="margin-top: 0; color: var(--accent); font-family: 'Jersey 10', cursive; font-size: 2rem; font-weight: 400;">Reglas del Juego</h3>
             <ul>
                 <li>Aparecerá un concepto en la pantalla.</li>
                 <li>Tendrás <strong>15 segundos</strong> para adivinar su definición.</li>
                 <li>Pasado el tiempo, la tarjeta girará automáticamente revelando la respuesta.</li>
-                <li>Si adivinas antes, presiona <strong>Respuesta</strong></li>
+                <li>Juega con un amigo turnándose para responder</li>
+                <li>Si adivinas antes, presiona <strong> Ver Respuesta</strong></li>
             </ul>
         </div>
         <button class="btn-start" onclick="startGame()">EMPEZAR JUEGO</button>
@@ -295,12 +359,17 @@
         </div>
 
         <div id="game-container">
+            <div id="progress-text" style="position: absolute; top: -30px; left: 0; width: 100%; text-align: center; color: var(--text); font-family: 'Inter', sans-serif; font-size: 1rem; opacity: 0.6; letter-spacing: 1px;"></div>
             <div class="card" id="card" onclick="handleCardClick()">
                 <div class="card-face card-front">
                     <div id="word-display">WORD</div>
-                    <button id="skip-btn" class="btn-skip" onclick="skipTimer(event)">RESPUESTA</button>
+                    <button id="skip-btn" class="btn-skip" onclick="skipTimer(event)">VER RESPUESTA</button>
                 </div>
-                <div class="card-face card-back" id="def-display">Definición aquí...</div>
+                <div class="card-face card-back">
+                    <div id="lottie-perfect" style="width: 100%; max-width: 90px; margin: 0 auto 15px auto;"></div>
+                    <div id="def-display">Definición aquí...</div>
+                    <div style="position: absolute; bottom: 20px; font-size: 0.9rem; opacity: 0.5; text-align: center; width: 100%; left: 0;">(Haz clic en la tarjeta para continuar)</div>
+                </div>
             </div>
         </div>
     </div>
@@ -447,8 +516,18 @@
         let revealTimeoutId = null;
         let lastDangerSecond = -1;
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let splitWordInstance = null;
 
         const timerCircle = { element: null, radius: 32, circumference: 2 * Math.PI * 32 };
+
+        // Configuración de Lottie
+        const perfectLottie = lottie.loadAnimation({
+            container: document.getElementById('lottie-perfect'),
+            renderer: 'svg',
+            loop: false,
+            autoplay: false,
+            path: 'perfect.json'
+        });
 
         function playSound(freq, type = 'sine', duration = 0.1) {
             const osc = audioCtx.createOscillator();
@@ -494,9 +573,47 @@
             clearTimers();
             const card = document.getElementById('card');
             card.classList.remove('flipped');
+            document.getElementById('bg-canvas').classList.remove('danger-glitch');
+            document.body.classList.remove('danger-vignette');
+            
+            // Alternar los fondos degradados de la tarjeta frontal
+            const cardFront = document.querySelector('.card-front');
+            if (currentIndex % 2 === 0) {
+                cardFront.classList.add('bg-gradient-1');
+                cardFront.classList.remove('bg-gradient-2');
+            } else {
+                cardFront.classList.add('bg-gradient-2');
+                cardFront.classList.remove('bg-gradient-1');
+            }
+            
+            // Revertir el texto animado anterior para que SplitType no restaure la palabra vieja
+            if (splitWordInstance) {
+                splitWordInstance.revert();
+            }
+
             document.getElementById('word-display').innerText = words[currentIndex].w;
             document.getElementById('def-display').innerText = words[currentIndex].d;
             document.getElementById('skip-btn').disabled = false;
+            document.getElementById('progress-text').innerText = `Palabra ${currentIndex + 1} de ${words.length}`;
+            
+            // Animación de GSAP + SplitType
+            splitWordInstance = new SplitType('#word-display', { types: 'chars' });
+            gsap.fromTo(splitWordInstance.chars, 
+                { y: 30, opacity: 0, rotationX: -90 },
+                { 
+                    y: 0, opacity: 1, rotationX: 0, 
+                    duration: 0.6, 
+                    ease: "back.out(2)",
+                    stagger: {
+                        each: 0.04, // Tiempo entre cada letra
+                        onStart: function() {
+                            // Pequeño bip aleatorio por cada letra que aparece
+                            playSound(600 + Math.random() * 400, 'triangle', 0.05);
+                        }
+                    }
+                }
+            );
+
             updateTimerUI(timerDuration);
             startTimer();
         }
@@ -544,6 +661,8 @@
             if (rounded <= 5 && rounded > 0) {
                 timerCircle.element.classList.add('danger');
                 timerText.style.fill = 'var(--group1)';
+                document.getElementById('bg-canvas').classList.add('danger-glitch');
+                document.body.classList.add('danger-vignette');
                 
                 if (lastDangerSecond !== rounded) {
                     playSound(400, 'triangle', 0.1); // Sonido sutil de advertencia
@@ -552,6 +671,8 @@
             } else {
                 timerCircle.element.classList.remove('danger');
                 timerText.style.fill = 'var(--text)';
+                document.getElementById('bg-canvas').classList.remove('danger-glitch');
+                document.body.classList.remove('danger-vignette');
                 lastDangerSecond = -1;
             }
         }
@@ -561,7 +682,10 @@
             document.getElementById('skip-btn').disabled = true;
             const card = document.getElementById('card');
             card.classList.add('flipped');
+            document.getElementById('bg-canvas').classList.remove('danger-glitch');
+            document.body.classList.remove('danger-vignette');
             playSound(600, 'sine', 0.15);
+            perfectLottie.goToAndPlay(0, true); // Reproduce la animación desde el inicio
             revealTimeoutId = setTimeout(() => {
                 nextWord();
             }, revealDuration * 1000);
@@ -594,6 +718,21 @@
             document.getElementById('end-screen').classList.add('active');
             playSound(523.25, 'sine', 0.5);
         }
+
+        // Soporte para teclado (Barra espaciadora para interactuar)
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                const gameScreen = document.getElementById('game-screen');
+                const startScreen = document.getElementById('start-screen');
+                if (startScreen.classList.contains('active')) {
+                    startGame();
+                } else if (gameScreen.classList.contains('active')) {
+                    const card = document.getElementById('card');
+                    if (card.classList.contains('flipped')) handleCardClick();
+                    else skipTimer();
+                }
+            }
+        });
 
         // Three.js Background Animation
         const scene = new THREE.Scene();
@@ -665,8 +804,26 @@
         dirLight.position.set(0, 10, 10);
         scene.add(dirLight);
 
+        // Función para actualizar la escala del texto según la pantalla
+        function updateTextScale() {
+            if (!textGroup) return;
+            let scaleBase, yPos;
+            if (window.innerWidth <= 480) {
+                scaleBase = 0.45;
+                yPos = 1.4;
+            } else if (window.innerWidth <= 768) {
+                scaleBase = 0.65;
+                yPos = 1.2;
+            } else {
+                scaleBase = 0.9;
+                yPos = 1.0;
+            }
+            textGroup.scale.set(scaleBase, scaleBase, scaleBase);
+            textGroup.position.y = yPos;
+        }
+
         // Cargar fuente y crear Texto 3D
-        let textGroup;
+        let textGroup, textMat, electricMat;
         const fontLoader = new THREE.FontLoader();
         fontLoader.load('https://unpkg.com/three@0.128.0/examples/fonts/optimer_bold.typeface.json', function(font) {
             const textGeo = new THREE.TextGeometry('TECH TRIVIA', {
@@ -683,14 +840,20 @@
             textGeo.computeBoundingBox();
             const centerOffset = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
             
-            const textMat = new THREE.MeshPhongMaterial({ color: 0x8841f9, specular: 0xffffff, shininess: 50 });
+            textMat = new THREE.MeshPhongMaterial({ color: 0x8841f9, specular: 0xffffff, shininess: 50, emissive: 0x000000 });
             const textMesh = new THREE.Mesh(textGeo, textMat);
             textMesh.position.x = centerOffset;
             
+            // Malla de alambre (Wireframe) para el efecto de electricidad
+            electricMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true, transparent: true, opacity: 0 });
+            const electricMesh = new THREE.Mesh(textGeo, electricMat);
+            textMesh.add(electricMesh); // Se añade como hijo para que comparta la posición del texto original
+
             textGroup = new THREE.Group();
             textGroup.add(textMesh);
             textGroup.position.z = 2; // Acercarlo a la cámara
             scene.add(textGroup);
+            updateTextScale();
         });
 
         camera.position.z = 5;
@@ -708,21 +871,20 @@
                 textGroup.rotation.y = Math.sin(time) * 0.15; 
                 textGroup.rotation.x = Math.cos(time * 0.8) * 0.1;
                 
-                // Escalar y posicionar usando los mismos breakpoints del CSS (Responsividad)
-                let scaleBase, yPos;
-                if (window.innerWidth <= 480) {
-                    scaleBase = 0.45;
-                    yPos = 1.4;
-                } else if (window.innerWidth <= 768) {
-                    scaleBase = 0.65;
-                    yPos = 1.2;
-                } else {
-                    scaleBase = 0.9;
-                    yPos = 1.0;
+                // Efecto de electricidad (Zap) periódico
+                if (textMat && electricMat) {
+                    const cycle = time % 4; // Ocurre un ciclo cada 4 segundos
+                    if (cycle < 0.25) { // Durante 0.25 segundos hace el "glitch" eléctrico
+                        const isZap = Math.random() > 0.4; // Probabilidad errática de parpadeo
+                        electricMat.opacity = isZap ? 0.5 + Math.random() * 0.5 : 0;
+                        textMat.emissive.setHex(isZap ? 0x38bdf8 : 0x000000); // El núcleo brilla cyan
+                        textMat.emissiveIntensity = isZap ? 0.8 : 0;
+                    } else {
+                        // Apagar efecto el resto del tiempo
+                        electricMat.opacity = 0;
+                        textMat.emissive.setHex(0x000000);
+                    }
                 }
-                
-                textGroup.scale.set(scaleBase, scaleBase, scaleBase);
-                textGroup.position.y = yPos;
 
                 // Mostrar el texto 3D solo cuando la pantalla de inicio está activa
                 textGroup.visible = document.getElementById('start-screen').classList.contains('active');
@@ -788,6 +950,7 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            updateTextScale();
         });
     </script>
 </body>
