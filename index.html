@@ -3,1562 +3,955 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Meta SEO Básico -->
-    <meta name="description" content="Chipmunk Tracker - Un secuenciador de audio web de 8 pistas estilo retro 8-bit con efectos de sonido. Crea tu propia música chiptune en el navegador.">
-    <meta name="keywords" content="secuenciador, tracker, chipmunk, 8-bit, música retro, editor de sonido, web audio api, creador de música, chiptune, sintetizador web">
-    <meta name="author" content="Chipmunk Tracker">
-    
-    <!-- Open Graph / Redes Sociales (Facebook, Discord, WhatsApp) -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Chipmunk Tracker - Secuenciador de Audio 8-Bit">
-    <meta property="og:description" content="Crea tu propia música estilo chiptune con este secuenciador de 8 pistas interactivo directamente en tu navegador.">
-    <meta property="og:image" content="chipmunk.webp">
-
-    <!-- Twitter Cards -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Chipmunk Tracker - Secuenciador de Audio 8-Bit">
-    <meta name="twitter:description" content="Crea tu propia música estilo chiptune con este secuenciador de 8 pistas interactivo directamente en tu navegador.">
-    <meta name="twitter:image" content="chipmunk.webp">
-
-    <title>Chipmunk Tracker</title>
-    <link rel="icon" type="image/webp" href="chipmunk.webp">
-    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Margarine&display=swap" rel="stylesheet">
+    <title>Tech Trivia Challenge - Diseño Digital UCB</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%2338bdf8'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Jersey+10&family=Text+Me+One&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/split-type"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
         :root {
-            --bg-color: #121212;
-            --panel-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-            --border-color: #333333;
-            --cell-bg: #2a2a2a;
-            --cell-hover: #3a3a3a;
-            --beat-divider: #444444;
-            --font-main: 'Jost', sans-serif;
-            --cell-height: 40px;
-            --cell-bg-alt: #16242b;
-            --cell-hover-alt: #20353f;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #8841f9;
+            --text: #f8fafc;
+            --group1: #e22e49;
         }
 
-        *,
-        *::before,
-        *::after {
+        * {
             box-sizing: border-box;
         }
 
         body {
-            background-color: var(--bg-color);
-            /* Usamos un gradiente con el color de fondo al 94% para atenuar sutilmente el patrón */
-            background-image: linear-gradient(rgba(18, 18, 18, 0.94), rgba(18, 18, 18, 0.94)), url('fondo.svg');
-            background-size: 600px; /* Reducimos la escala del SVG para que se repita mejor */
-            background-repeat: repeat;
-            background-attachment: fixed; /* Mantiene el fondo fijo al hacer scroll */
-            color: var(--text-color);
-            font-family: var(--font-main);
             margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .main-content {
-            display: flex;
-            flex-direction: row;
-            gap: 30px;
-            justify-content: center;
-            align-items: flex-start;
-            width: 100%;
-            max-width: 1200px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            font-family: 'Margarine', sans-serif;
-            font-weight: 700;
-            margin: 0;
-            font-size: 2.5rem;
-        color: #de6802;
-        text-shadow: 4px 4px 0 #a73200cd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        .header h1 img {
-            height: 3.5rem;
-            width: auto;
-        }
-
-        .header p {
-            color: #aaaaaa;
-            margin-top: 5px;
-        }
-
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 30px;
-            background-color: var(--panel-bg);
-            padding: 15px 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-
-        .controls select {
-            width: auto;
-            max-width: 260px;
-            background-color: #000000;
-            color: #ffffff;
-            border: 1px solid #777777;
-            border-radius: 50px;
-            padding: 10px 20px;
-            font-family: var(--font-main);
-            font-size: 0.95rem;
-            font-weight: 500;
-            outline: none;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .controls select:hover,
-        .controls select:focus {
-            background-color: #222222;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .bpm-control {
-            display: flex;
-            align-items: center;
-            background-color: #000000;
-            border: 1px solid #777777;
-            border-radius: 50px;
-            padding: 8px 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s ease;
-        }
-
-        .bpm-control:hover {
-            background-color: #222222;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .bpm-control label {
-            color: #aaaaaa;
-            font-size: 0.95rem;
-            margin-right: 8px;
-            font-weight: 500;
-            cursor: ns-resize;
-        }
-
-        .bpm-control input[type="number"] {
-            background: transparent;
-            border: none;
-            color: #00bcd4;
-            font-family: var(--font-main);
-            font-size: 1.1rem;
-            font-weight: 700;
-            width: 45px;
-            text-align: center;
-            outline: none;
-            -moz-appearance: textfield;
-            cursor: ns-resize;
-        }
-
-        .bpm-control input[type="number"]::-webkit-outer-spin-button,
-        .bpm-control input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            width: 300px;
-            flex-shrink: 0;
-        }
-
-        .effects {
-            background-color: var(--panel-bg);
-            padding: 20px;
-            border-radius: 18px;
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
-        }
-
-        .sequencer-wrapper {
-            flex-grow: 1;
-            display: flex;
-            width: 100%;
-            background-color: var(--panel-bg);
-            padding: 20px 0 20px 20px;
-            border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             overflow: hidden;
-        }
-
-        .labels-column {
-            display: grid;
-            gap: 4px;
-            padding-right: 15px;
-            border-right: 1px solid var(--border-color);
-            margin-right: 15px;
-            align-content: start;
-            flex-shrink: 0;
-        }
-
-        .sequencer-container {
-            flex-grow: 1;
-            min-width: 0;
-            position: relative;
-            overflow-x: auto;
-            scrollbar-width: auto;
-            scrollbar-color: #555555 var(--panel-bg);
-            padding-right: 20px;
-            padding-bottom: 15px;
-        }
-
-        .sequencer-container::-webkit-scrollbar {
-            height: 28px;
-        }
-
-        .sequencer-container::-webkit-scrollbar-track {
-            background: var(--panel-bg);
-            border-radius: 14px;
-        }
-
-        .sequencer-container::-webkit-scrollbar-thumb {
-            background-color: #555555;
-            border-radius: 14px;
-            border: 4px solid var(--panel-bg);
-            transition: background-color 0.2s;
-        }
-
-        .sequencer-container::-webkit-scrollbar-thumb:hover {
-            background-color: #00bcd4;
-        }
-
-        .effects h3 {
-            margin: 0 0 10px 0;
-            color: #ffffff;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            appearance: none;
-            height: 10px;
-            background: #333;
-            border-radius: 999px;
-            outline: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #00bcd4;
-            border: 2px solid #ffffff;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-            transition: transform 0.2s ease;
-        }
-
-        input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.1);
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #00bcd4;
-            border: 2px solid #ffffff;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        }
-
-        input[type="range"]::-moz-range-track {
-            background: #333;
-            border-radius: 999px;
-            height: 10px;
-        }
-
-        .effect-controls label {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            color: #e0e0e0;
-            font-size: 0.95rem;
-        }
-
-        .effect-controls label input[type="checkbox"] {
-            transform: scale(1.1);
-            margin-left: 8px;
-        }
-
-        .effect-controls label span {
-            color: #bbbbbb;
-            font-size: 0.85rem;
-        }
-
-        @media (max-width: 1050px) {
-            .sequencer-container {
-                margin-right: 0;
-            }
-
-            .sidebar {
-                width: 100%;
-            }
-
-            .effects {
-                position: static;
-                width: 100%;
-                max-height: none;
-            }
-        }
-
-        @media (max-width: 720px) {
-            :root {
-                --cell-height: 34px;
-            }
-            body {
-                padding: 12px;
-            }
-
-            .controls {
-                padding: 12px;
-            }
-
-            .controls select,
-            .controls button,
-            .bpm-control {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .effects {
-                padding: 18px;
-                border-radius: 14px;
-            }
-
-            .grid {
-                --cell-size: minmax(30px, 1fr);
-            }
-
-            .cell {
-                width: 100%;
-                min-width: 30px;
-                height: var(--cell-height);
-            }
-
-            .track-label {
-                font-size: 0.8rem;
-            }
-        }
-
-        .effects-toggle,
-        #effects-toggle-btn {
-            display: none;
-        }
-
-        .effects h3 {
-            margin: 0 0 10px 0;
-            color: #ffffff;
-        }
-
-        .effect-controls {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-bottom: 15px;
+            height: 100vh;
         }
 
-        .effect-controls label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #e0e0e0;
-            font-size: 0.9rem;
+        /* Viñeta roja para los bordes de la pantalla (estilo HUD de videojuego) */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Evita que bloquee los clics del usuario */
+            z-index: 50;
+            box-shadow: inset 0 0 0px transparent;
+        }
+        body.danger-vignette::after {
+            animation: vignette-pulse 1s ease-in-out infinite both;
         }
 
-        .effect-controls input[type="range"] {
-            flex: 1;
-            max-width: 200px;
-        }
-
-        button {
-            background-color: #000000;
-            color: white;
-            border: 1px solid #777777;
-            padding: 10px 20px;
-            font-size: 1rem;
-            font-family: var(--font-main);
-            font-weight: 500;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        button:hover {
-            background-color: #333333;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        button:active {
-            transform: translateY(1px);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        button.primary {
-            background-color: #00bcd4;
-            color: #000;
-            border: 1px solid #00bcd4;
-        }
-
-        button.primary:hover { background-color: #26c6da; border-color: #26c6da; }
-
-        button.warning {
-            background-color: #ff9800;
-            color: #000;
-            border: 1px solid #ff9800;
-        }
-        button.warning:hover { background-color: #ffa726; border-color: #ffa726; }
-
-        button.record {
-            background-color: #f44336;
-            border: 1px solid #f44336;
-        }
-        button.record.recording {
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0% { background-color: #f44336; }
-            50% { background-color: #8b0000; }
-            100% { background-color: #f44336; }
-        }
-
-        .grid {
-            display: grid;
-            --cell-size: 40px;
-            gap: 4px;
-            align-items: center;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        .track-label {
-            font-weight: 500;
-            color: #888;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            height: var(--cell-height);
-        }
-
-        .cell {
-            width: 40px;
-            height: var(--cell-height);
-            background-color: var(--cell-bg);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.1s, transform 0.1s, box-shadow 0.1s, filter 0.1s;
-            box-sizing: border-box;
-            position: relative;
-        }
-
-        .cell:hover {
-            background-color: var(--cell-hover);
-        }
-
-        /* Fondo gris un poco más claro para la fila de Drums */
-        .cell[data-track="8"] {
-            background-color: #383838;
-        }
-        
-        .cell[data-track="8"]:hover {
-            background-color: #484848;
-        }
-
-        /* Estilos para los cuadrantes alternos (cada 16 pasos) con tono azulado */
-        .cell.alt-quadrant {
-            background-color: var(--cell-bg-alt);
-        }
-        
-        .cell.alt-quadrant:hover {
-            background-color: var(--cell-hover-alt);
-        }
-        
-        .cell[data-track="8"].alt-quadrant {
-            background-color: #23343d;
-        }
-        
-        .cell[data-track="8"].alt-quadrant:hover {
-            background-color: #2f4550;
-        }
-
-        .cell.current {
-            border: 2px solid #ffffff;
-            transform: scale(1.05);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-            z-index: 1;
-        }
-
-        .cell.playing {
-            transform: scale(1.15);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8) !important;
-            filter: brightness(1.4);
-            z-index: 2;
-        }
-
-        .v-divider {
-            width: 2px;
-            align-self: stretch;
-            background-color: var(--beat-divider);
-            border-radius: 1px;
-        }
-
-        .h-divider {
-            grid-column: 1 / -1;
-            height: 2px;
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            background-color: var(--beat-divider);
-            border-radius: 1px;
+            height: 100%;
+            z-index: -1;
         }
-        
-        .step-header {
+
+        /* Pantallas */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 20px;
             text-align: center;
-            font-size: 0.85rem;
-            color: #aaaaaa;
-            font-weight: bold;
-            height: 20px;
+        }
+
+        .active { display: flex; }
+
+        /* Inicio y Final */
+        h1 { font-family: 'Jersey 10', cursive; font-size: 5rem; font-weight: 400; margin-bottom: 1rem; color: var(--accent); }
+        .btn-start {
+            padding: 15px 40px;
+            font-size: 2rem;
+            font-family: 'Jersey 10', cursive;
+            font-weight: 400;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-start:hover { transform: scale(1.05); }
+        .btn-start:active { transform: scale(0.95); }
+
+        /* Juego */
+        #game-container {
+            perspective: 1000px;
+            width: 70%;
+            max-width: 600px;
+            height: 380px;
+            cursor: pointer;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 15px 40px rgba(136, 65, 249, 0.15);
+        }
+
+        .card:active { transform: scale(0.98); }
+        .card.flipped { transform: rotateY(180deg); }
+        .card.flipped:active { transform: rotateY(180deg) scale(0.98); }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: rgba(30, 41, 59, 0.3);
+            border: 2px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(7px);
         }
 
-        .download-link {
-            display: none;
-            width: 100%;
+        .card-front { 
+            font-family: 'Jersey 10', cursive; 
+            font-size: clamp(2rem, 8vw, 4rem); 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            color: var(--accent); 
+            flex-direction: column;
+            text-shadow: 4px 4px 0px #520089;
             text-align: center;
-            color: #00bcd4;
-            text-decoration: none;
-            font-weight: bold;
+        }
+        
+        /* Fondos alternos para la cara frontal (con degradados sutiles y oscuros) */
+        .card-face.bg-gradient-1 {
+            background: linear-gradient(135deg, rgba(217, 70, 239, 0.15), rgba(56, 189, 248, 0.15), rgba(30, 58, 138, 0.3));
+        }
+        .card-face.bg-gradient-2 {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.3), rgba(56, 189, 248, 0.15), rgba(217, 70, 239, 0.15));
+        }
+        
+        .card-back { 
+            font-family: 'Text Me One', sans-serif; 
+            font-size: 1.8rem; 
+            transform: rotateY(180deg); 
+            line-height: 1.4;
+            border-color: transparent;
+            flex-direction: column;
+            text-align: center;
         }
 
-        .download-link:hover {
-            text-decoration: underline;
+        /* Pseudo-elemento para el borde con degradado animado */
+        .card-back::before {
+            content: '';
+            position: absolute;
+            inset: -2px; /* Se expande para cubrir el área del borde transparente */
+            border-radius: 22px; /* Radio de la tarjeta (20) + grosor del borde (2) */
+            padding: 2px; /* El grosor del nuevo borde de degradado */
+            background: linear-gradient(60deg, #38bdf8, #d946ef, #1e3a8a, #d946ef, #38bdf8);
+            background-size: 300% 300%;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            animation: border-gradient-anim 4s ease-in-out infinite;
+        }
+
+        @keyframes border-gradient-anim {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Marcadores */
+        #timer-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .timer-svg {
+            width: 80px;
+            height: 80px;
+        }
+
+        .timer-svg circle {
+            fill: none;
+            stroke-width: 7;
+        }
+
+        .timer-bg {
+            stroke: rgba(255,255,255,0.12);
+        }
+
+        .timer-ring {
+            stroke: url(#timerGradient);
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            transition: stroke-dashoffset 0.1s linear;
+        }
+        
+        @keyframes pulse-danger {
+            0%, 100% { filter: drop-shadow(0 0 2px var(--group1)); }
+            50% { filter: drop-shadow(0 0 12px var(--group1)); }
+        }
+
+        .timer-ring.danger {
+            stroke: var(--group1);
+            animation: pulse-danger 1s infinite;
+        }
+
+        #timer-text {
+            font-size: 1.6rem;
+            fill: var(--text);
+            font-weight: 700;
+            text-anchor: middle;
+            dominant-baseline: central;
+            transition: fill 0.3s;
+        }
+
+        #logo {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 80px;
+            height: auto;
+            z-index: 100;
+            opacity: 0.7;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        #logo:hover { transform: scale(1.05); opacity: 1; }
+        #logo:active { transform: scale(0.95); }
+
+        .rules-container {
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            text-align: left;
+            background: rgba(30, 41, 59, 0.6);
+            padding: 20px 30px;
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+        
+        .rules-container ul { padding-left: 20px; }
+        
+        .btn-skip {
+            font-family: 'Jersey 10', cursive;
+            padding: 10px 30px;
+            font-size: 1.5rem;
+            background: var(--group1);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            margin-top: 30px;
+        }
+        
+        .btn-skip:hover { transform: scale(1.05); }
+        .btn-skip:active { transform: scale(0.95); }
+        .btn-skip:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 4rem; }
+            .card-front { font-size: 5rem; }
+            .card-back { font-size: 1.4rem; padding: 20px; }
+            #game-container { width: 90%; height: 320px; }
+            #logo { width: 60px; top: 10px; right: 10px; }
+            .rules-container { width: 90%; font-size: 1rem; padding: 15px; }
+            .btn-start { font-size: 1.5rem; padding: 12px 30px; }
+            .timer-svg { width: 60px; height: 60px; }
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 3rem; }
+            .card-front { font-size: 3.5rem; }
+            .card-back { font-size: 1.1rem; }
+            #game-container { height: 300px; }
+            .rules-container h3 { font-size: 1.5rem; }
+            .btn-skip { font-size: 1.2rem; padding: 8px 20px; margin-top: 10px; }
+            .card-face { padding: 20px; }
+        }
+
+        @keyframes screen-glitch {
+            0% { filter: hue-rotate(0deg) contrast(1) sepia(0); transform: translateX(0) scale(1); }
+            20% { filter: hue-rotate(90deg) contrast(1.5) sepia(0.5); transform: translateX(-10px) translateY(5px) scale(1.02); }
+            40% { filter: hue-rotate(-90deg) contrast(0.5) invert(0.2); transform: translateX(10px) translateY(-5px) scale(0.98); }
+            60% { filter: hue-rotate(45deg) contrast(2) sepia(0.8); transform: translateX(-5px) translateY(2px) scale(1.05); }
+            80% { filter: hue-rotate(-45deg) contrast(1.2) invert(0.1); transform: translateX(5px) translateY(-2px) scale(0.95); }
+            100% { filter: hue-rotate(0deg) contrast(1) sepia(0) invert(0); transform: translateX(0) scale(1); }
+        }
+        .glitch-active {
+            animation: screen-glitch 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+
+        @keyframes subtle-danger-pulse {
+            0%, 100% { filter: sepia(0) hue-rotate(0deg) saturate(1) contrast(1); transform: scale(1) rotate(0deg); }
+            50% { filter: sepia(0.8) hue-rotate(-50deg) saturate(2.5) contrast(1.15); transform: scale(1.03) rotate(0.5deg); }
+        }
+        .danger-glitch {
+            /* Efecto detallado: micro-rotación (vértigo) y mayor contraste */
+            animation: subtle-danger-pulse 1s ease-in-out infinite both;
+        }
+
+        @keyframes vignette-pulse {
+            0%, 100% { box-shadow: inset 0 0 50px rgba(226, 46, 73, 0.1); }
+            50% { box-shadow: inset 0 0 180px rgba(226, 46, 73, 0.45); }
         }
     </style>
 </head>
 <body>
+    <img src="DDUCB.jfif" alt="Logo DDUCB" id="logo" onclick="location.reload()" title="Volver al inicio">
+    <canvas id="bg-canvas"></canvas>
 
-    <div class="header">
-        <h1>
-            <img src="chipmunk.webp" alt="Chipmunk">
-            Chipmunk Tracker
-        </h1>
-        <p>Secuenciador de 8 Pistas • Score 4/4 • Tonos Agudos</p>
+    <div id="start-screen" class="screen active">
+        <h1 style="opacity: 0; pointer-events: none;">TECH TRIVIA</h1>
+        <div class="rules-container">
+            <h3 style="margin-top: 0; color: var(--accent); font-family: 'Jersey 10', cursive; font-size: 2rem; font-weight: 400;">Reglas del Juego</h3>
+            <ul>
+                <li>Aparecerá un concepto en la pantalla.</li>
+                <li>Tendrás <strong>15 segundos</strong> para adivinar su definición.</li>
+                <li>Pasado el tiempo, la tarjeta girará automáticamente revelando la respuesta.</li>
+                <li>Juega con un amigo turnándose para responder</li>
+                <li>Si adivinas antes, presiona <strong> Ver Respuesta</strong></li>
+            </ul>
+        </div>
+        <button class="btn-start" onclick="startGame()">EMPEZAR JUEGO</button>
     </div>
 
-    <div class="controls">
-        <button id="btn-play" class="primary" title="Iniciar/Pausar reproducción">▶ Play</button>
-        <select id="instrument-select" title="Selecciona el instrumento melódico (Tracks 1-8)">
-            <option value="square">8-bit Square</option>
-            <option value="triangle">8-bit Triangle</option>
-            <option value="sawtooth">8-bit Sawtooth</option>
-            <option value="sine">8-bit Sine</option>
-            <option value="pulse">8-bit Pulse</option>
-            <option value="noise">8-bit Noise</option>
-            <option value="chip-bass">Chip Bass</option>
-            <option value="chip-lead">Chip Lead</option>
-            <option value="chip-pad">Chip Pad</option>
-            <option value="computer-beep">Computer Beep</option>
-            <option value="chimes">Dreamy Chimes</option>
-            <option value="accordion-8bit">Accordion</option>
-            <option value="piano-8bit">Piano</option>
-        </select>
-        <select id="drum-select" title="Selecciona el sonido para la pista de batería (Drums)">
-            <option value="kick">Kick Drum</option>
-            <option value="snare">Snare</option>
-            <option value="hihat">Hi-Hat</option>
-            <option value="tom">Tom</option>
-            <option value="clap">Clap</option>
-            <option value="crash">Crash</option>
-            <option value="cowbell">Cowbell</option>
-        </select>
-        <div class="bpm-control" title="Ajustar la velocidad (Tempo)">
-            <label for="tempo-input">BPM:</label>
-            <input type="number" id="tempo-input" min="40" max="300" value="130">
+    <div id="game-screen" class="screen">
+        <div id="timer-wrapper">
+            <svg class="timer-svg" viewBox="0 0 80 80">
+                <defs>
+                    <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8" />
+                        <stop offset="100%" stop-color="#8b008b" />
+                    </linearGradient>
+                </defs>
+                <circle class="timer-bg" cx="40" cy="40" r="32" />
+                <circle class="timer-ring" cx="40" cy="40" r="32" />
+                <text id="timer-text" x="40" y="40"></text>
+            </svg>
         </div>
-        <button id="btn-add-quadrant" title="Agregar 16 pasos adicionales (4 tiempos)">➕ +16 Pasos</button>
-        <button id="btn-remove-quadrant" title="Quitar los últimos 16 pasos de la cuadrícula">➖ -16 Pasos</button>
-        <button id="btn-reset" class="warning" title="Limpiar todas las notas de la secuencia">Limpiar</button>
-        <button id="btn-record" class="record" title="Exportar la secuencia a un archivo de audio">⏺ Grabar a Audio</button>
-        <a id="download-link" class="download-link" href="#" download="chipmunk_track.ogg" title="Haz clic para descargar tu archivo">Descargar Pista Grabada</a>
+
+        <div id="game-container">
+            <div id="progress-text" style="position: absolute; top: -30px; left: 0; width: 100%; text-align: center; color: var(--text); font-family: 'Inter', sans-serif; font-size: 1rem; opacity: 0.6; letter-spacing: 1px;"></div>
+            <div class="card" id="card" onclick="handleCardClick()">
+                <div class="card-face card-front">
+                    <div id="word-display">WORD</div>
+                    <button id="skip-btn" class="btn-skip" onclick="skipTimer(event)">VER RESPUESTA</button>
+                </div>
+                <div class="card-face card-back">
+                    <div id="lottie-perfect" style="width: 100%; max-width: 90px; margin: 0 auto 15px auto;"></div>
+                    <div id="def-display">Definición aquí...</div>
+                    <div style="position: absolute; bottom: 20px; font-size: 0.9rem; opacity: 0.5; text-align: center; width: 100%; left: 0;">(Haz clic en la tarjeta para continuar)</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="main-content">
-        <div class="sequencer-wrapper">
-            <div class="labels-column" id="labels-column">
-                <!-- Las etiquetas de las pistas se generan con JS -->
-            </div>
-            <div class="sequencer-container">
-                <div class="grid" id="sequencer-grid">
-                    <!-- La malla se genera con JS -->
-                </div>
-            </div>
-        </div>
-
-        <div class="sidebar">
-            <div class="effects" id="effects-panel" title="Panel de ajustes de sonido">
-                <h3 title="Aplica efectos a todo el sonido">Efectos Globales</h3>
-                <div class="effect-controls">
-                    <label title="Activar efecto de eco">Delay: <input type="checkbox" id="delay-enable" title="Activar/Desactivar Delay"></label>
-                    <label title="Ajustar la velocidad del eco">Tiempo: <input type="range" id="delay-time" min="0" max="1" value="0.3" step="0.01" title="Velocidad del Delay"></label>
-                    <label title="Ajustar las repeticiones del eco">Feedback: <input type="range" id="delay-feedback" min="0" max="0.9" value="0.4" step="0.01" title="Repeticiones del Delay"></label>
-                </div>
-                <div class="effect-controls">
-                    <label title="Activar reverberación o ambiente">Reverb: <input type="checkbox" id="reverb-enable" title="Activar/Desactivar Reverb"></label>
-                </div>
-                <div class="effect-controls">
-                    <label title="Activar efecto de saturación (Distorsión)">Distorsión: <input type="checkbox" id="distortion-enable" title="Activar/Desactivar Distorsión"></label>
-                    <label title="Nivel de intensidad de la distorsión">Cantidad: <input type="range" id="distortion-amount" min="0" max="400" value="120" step="1" title="Intensidad de la distorsión"></label>
-                </div>
-                <div class="effect-controls">
-                    <label title="Ajuste general de volumen de la mezcla">Volumen Maestro: <input type="range" id="master-gain" min="0" max="2" value="1.0" step="0.01" title="Control de volumen maestro"></label>
-                </div>
-            </div>
-            
-            <div class="effects" id="project-panel" title="Gestión de proyectos">
-                <h3 title="Guarda o carga tu avance">Proyectos</h3>
-                <p style="font-size: 0.85rem; color: #aaaaaa; margin: 0 0 15px 0;">Exporta o importa tus notas en formato .json</p>
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button id="btn-save" title="Guardar proyecto actual en un archivo JSON" style="flex: 1; justify-content: center;">Guardar</button>
-                    <button id="btn-load" title="Cargar proyecto desde un archivo JSON" style="flex: 1; justify-content: center;">Cargar</button>
-                    <input type="file" id="file-load" accept=".json" style="display: none;">
-                </div>
-            </div>
-        </div>
+    <div id="end-screen" class="screen">
+        <h1>FIN DEL JUEGO</h1>
+        <p style="font-size: 1.4rem; max-width: 600px; margin: 0 auto; opacity: 0.85;">Has repasado todas las palabras. Si quieres volver a jugar, presiona reiniciar.</p>
+        <button class="btn-start" onclick="location.reload()">REINICIAR</button>
     </div>
 
     <script>
-        // --- CONFIGURACIÓN DE AUDIO (Estilo Chipmunk) ---
-        // Escala mayor pentatónica alta para dar el efecto "Chipmunk" / "8-bit alegre"
-        const TRACK_FREQUENCIES = [659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51, 1567.98, 1760.00, 0];
-        // Colores de resalte modernos para cada pista
-        const TRACK_COLORS = ['#FF1744', '#F50057', '#D500F9', '#651FFF', '#3D5AFE', '#00E5FF', '#00E676', '#FFEA00', '#FF9800'];
-        
-        const NUM_TRACKS = 9;
-        let NUM_STEPS = 16;
-        let TEMPO = 130; // BPM
+        const words = [
+            {w: "PNG", d: "Formato de imagen con compresión sin pérdida que soporta transparencias (canal alfa)."},
+            {w: "Three.js", d: "Librería de JavaScript para crear y mostrar gráficos 3D animados en el navegador usando WebGL."},
+            {w: "Locomotive", d: "Librería popular para crear efectos de scroll suave (Smooth Scroll) en sitios modernos."},
+            {w: "Guttenberg", d: "El editor de bloques nativo de WordPress que revolucionó la creación de contenido."},
+            {w: "CSS", d: "Lenguaje de estilos utilizado para describir la presentación de documentos HTML."},
+            {w: "webP", d: "Formato de imagen moderno de Google que ofrece una compresión superior (30% menor que JPG)."},
+            {w: "Tilemap", d: "Mapa de celdas usado en videojuegos 2D para organizar y dibujar el nivel en una cuadrícula."},
+            {w: "JSON", d: "Formato ligero de intercambio de datos, fácil de leer para humanos y máquinas."},
+            {w: "OBJ", d: "Formato de archivo estándar para geometría 3D (puntos, líneas y caras)."},
+            {w: "Tileset", d: "Conjunto de imágenes usadas para construir los bloques repetitivos de un tilemap en videojuegos."},
+            {w: "JavaScript", d: "Lenguaje de programación fundamental de la web para crear interactividad."},
+            {w: "C Sharp", d: "Lenguaje de programación orientado a objetos usado en juegos con Unity y aplicaciones de escritorio."},
+            {w: "PHP", d: "Lenguaje de programación de servidor, motor principal de WordPress y Facebook."},
+            {w: "MySQL", d: "Sistema de gestión de bases de datos relacionales más utilizado en la web."},
+            {w: "SVG", d: "Gráficos vectoriales escalables basados en XML; no pierden calidad al ampliarlos."},
+            {w: "LocalWP", d: "Herramienta local para desarrollar sitios de WordPress de forma rápida y sencilla."},
+            {w: "Glb/gltf", d: "El 'JPEG de los 3D'. Formato eficiente para transmitir escenas y modelos 3D en la web."},
+            {w: "Lottie", d: "Formato de archivo de animación basado en JSON que permite usar animaciones de After Effects en tiempo real."},
+            {w: "Duik Angela", d: "Potente script y conjunto de herramientas gratuitas para After Effects, utilizado para el rigging y animación de personajes."},
+            {w: "Bodymovin", d: "Plugin que exporta animaciones de After Effects a JSON para usarlas con Lottie en web y apps."},
+            {w: "NGINX / Apache", d: "Los dos servidores web más populares para servir archivos y procesar solicitudes."},
+            {w: "Nombre de dominio", d: "La dirección amigable (ej: google.com) que apunta a una dirección IP de un servidor."},
+            {w: "Slider", d: "Elemento web (carrusel) que muestra múltiples imágenes o contenidos de forma cíclica."},
+            {w: "Wireframe", d: "Esquema visual simple que representa la estructura de una página web sin diseño final."},
+            {w: "Lente 35mm", d: "Objetivo fotográfico clásico, considerado cercano a la visión humana y muy versátil para narrativa visual."},
+            {w: ".cube", d: "Formato de archivo común para LUTs (Look Up Tables) utilizados en corrección de color."},
+            {w: "webM", d: "Formato de video abierto y eficiente diseñado específicamente para la web."},
+            {w: "GSAP", d: "GreenSock Animation Platform. La librería estándar de la industria para animaciones de alto rendimiento."},
+            {w: "Licencia CC0", d: "Creative Commons Zero. Contenido de dominio público, sin restricciones de derechos de autor."},
+            {w: "Atributo ALT", d: "Texto alternativo para imágenes, crucial para accesibilidad y SEO."},
+            {w: "WebGL", d: "API de JavaScript para renderizar gráficos 2D y 3D en el navegador sin plugins."},
+            {w: "TouchDesigner", d: "Entorno de programación visual basado en nodos para crear contenido multimedia interactivo en tiempo real y arte generativo."},
+            {w: "Certificado SSL", d: "Protocolo de seguridad que cifra la conexión entre el usuario y el servidor (HTTPS)."},
+            {w: "Godot", d: "Motor de videojuegos de código abierto, potente y ligero para 2D y 3D."},
+            {w: "ISO", d: "Sensibilidad del sensor de la cámara a la luz. Valores altos captan más luz pero introducen ruido digital o grano."},
+            {w: "Game engine", d: "Software que proporciona herramientas y runtime para crear videojuegos más fácilmente."},
+            {w: "Juego TopDown", d: "Juego con cámara desde arriba donde el personaje se mueve en un plano horizontal."},
+            {w: "OrbitControls", d: "Script de Three.js que permite al usuario rotar, mover y hacer zoom en una escena 3D."},
+            {w: "RoyaltyFree", d: "Recursos que se pueden usar legalmente tras un pago único o de forma gratuita sin pagar regalías."},
+            {w: "FBX", d: "Formato de intercambio 3D propiedad de Autodesk, muy usado en videojuegos."},
+            {w: "RigidBody", d: "Objeto físico en un motor de física que se mueve con inercia y responde a fuerzas como gravedad y choques."},
+            {w: "Collider", d: "Componente invisible que define la forma de colisión de un objeto en un juego."},
+            {w: "Benchmarking", d: "Proceso de comparar el rendimiento de tu sitio o producto con la competencia."},
+            {w: "CTA", d: "Call To Action. Botón o frase diseñada para provocar una respuesta inmediata del usuario."},
+            {w: "DPI/PPP", d: "Puntos por pulgada. Medida de resolución de impresión y densidad de pantallas."},
+            {w: "Códec v9", d: "Códec de compresión de video de Google (VP9) usado para streaming de alta calidad en YouTube."},
+            {w: "UX/UI", d: "User Experience y User Interface. El equilibrio entre cómo funciona y cómo se ve un producto."},
+            {w: ".FIG", d: "Extensión de archivo nativa de Figma, la herramienta líder en diseño de interfaces."},
+            {w: "Padding", d: "Espacio interno de un elemento, entre su contenido y su borde."},
+            {w: "Iconografía", d: "Conjunto de iconos que ayudan a la navegación y comunicación visual sin texto."},
+            {w: "CDN", d: "Content Delivery Network. Red de servidores distribuidos que aceleran la entrega de contenido web."},
+            {w: "Hosting", d: "Servicio de alojamiento donde residen los archivos de tu sitio web para estar en línea."},
+            {w: "React", d: "Biblioteca de JavaScript para construir interfaces de usuario basadas en componentes."},
+            {w: "LiveServer", d: "Extensión que crea un servidor local con recarga automática al guardar cambios en el código."},
+            {w: "Estado Idle", d: "Estado en que un personaje o entidad está quieto, esperando acción del jugador."},
+            {w: "ChromaKey", d: "Técnica de postproducción para sustituir un fondo de color sólido (verde/azul) por otro."},
+            {w: "Obturación", d: "Tiempo que el sensor de la cámara está expuesto a la luz, controlando la captura del movimiento (motion blur)."},
+            {w: "CMS", d: "Content Management System (ej: WordPress). Sistema para gestionar contenidos web fácilmente."},
+            {w: "LMS", d: "Learning Management System (ej: Moodle). Plataforma para administrar cursos online."},
+            {w: "SEO", d: "Search Engine Optimization. Optimización para aparecer en los primeros resultados de búsqueda."},
+            {w: "Sprite", d: "Imagen que contiene múltiples imágenes pequeñas, usada en juegos o para optimizar carga web."},
+            {w: "Hitbox", d: "Área invisible que define la zona de colisión o impacto de un personaje u objeto."},
+            {w: ".DRP", d: "Extensión de archivo de proyecto de DaVinci Resolve."},
+            {w: "Easing", d: "La aceleración o desaceleración en una animación (entrada/salida suave)."},
+            {w: "HSL", d: "Hue, Saturation, Lightness. Una forma intuitiva de definir colores en diseño y CSS."},
+            {w: "Parallax", d: "Efecto visual donde el fondo se mueve a una velocidad distinta que el primer plano."},
+            {w: "Matte Painting", d: "Técnica VFX que consiste en crear escenarios virtuales o paisajes pintados digitalmente para integrarlos con metraje real."},
+            {w: "Moodboard", d: "Muro de inspiración visual con referencias de color, tipografía y estilo antes de diseñar."},
+            {w: "AR", d: "Augmented Reality (Realidad Aumentada). Superponer elementos digitales al mundo real."},
+            {w: "MindAr", d: "Tecnología que combina inteligencia artificial y realidad aumentada para experiencias interactivas."},
+            {w: "AppleProRes", d: "Códec de video de alta calidad para edición profesional con pérdida mínima."},
+            {w: "Libería dinámica", d: "Conjunto de funciones externas que un programa carga solo cuando las necesita."},
+            {w: "h264/h265", d: "Estándares de compresión de video más usados. H265 es el sucesor más eficiente (HEVC High Efficiency Video Coding)."},
+            {w: "Hexadecimal", d: "Sistema numérico base 16 usado en web para definir colores (ej: #FF5500)."},
+            {w: "Canal Alpha", d: "Canal de datos que define el grado de transparencia de un píxel."},
+            {w: "Hotspot", d: "Punto interactivo en una imagen o escena 3D que activa una acción al hacer clic."},
+            {w: "Etalonaje", d: "Proceso artístico de corrección de color para darle una narrativa visual al video."},
+            {w: "Isotipo / logotipo / isologo", d: "Diferentes formas de representar una marca (solo icono, solo texto o ambos combinados)."},
+            {w: "Flat Design", d: "Estilo de diseño minimalista que evita sombras, texturas o efectos 3D realistas."},
+            {w: "Píxel Art", d: "Forma de arte digital donde las imágenes se crean a nivel de píxeles individuales."},
+            {w: "Asset", d: "Cualquier recurso digital (modelo 3D, sonido, imagen) usado en un proyecto."},
+            {w: "Isologo", d: "Representación visual de una marca donde el texto y el icono gráfico están fusionados y no pueden funcionar por separado."},
+            {w: "VFX", d: "Visual Effects. Efectos creados digitalmente para cine, video o juegos."},
+            {w: "EEVEE", d: "Motor de renderizado en tiempo real de Blender basado en la tecnología de videojuegos."},
+            {w: "API", d: "Application Programming Interface. Interfaz que permite que dos aplicaciones se comuniquen."},
+            {w: "WAV/AIFF", d: "Formatos de audio profesionales sin compresión (máxima calidad)."},
+            {w: "WEBFONT", d: "Fuentes optimizadas para cargarse dinámicamente en sitios web (ej: WOFF2)."},
+            {w: "Node Based", d: "Interfaz de trabajo basada en nodos conectados (común en Blender, DaVinci y Unreal)."},
+            {w: "Favicon", d: "Pequeño icono que aparece en la pestaña del navegador junto al título del sitio."},
+            {w: "Sonido 8D", d: "Efecto de audio envolvente que da la sensación de que el sonido se mueve alrededor de la cabeza."},
+            {w: "GITHUB", d: "Plataforma de alojamiento para control de versiones y colaboración de código usando Git."},
+            {w: "Pipeline", d: "Flujo de trabajo o cadena de procesos técnicos y artísticos interconectados en una producción de software, animación o VFX."},
+            {w: "RAW", d: "Formato de archivo digital sin procesar ni comprimir, que conserva todos los datos captados por el sensor de la cámara."},
+            {w: "ShapeKeys", d: "Técnica de animación 3D (como en Blender) que permite guardar variaciones de una malla, ideal para expresiones faciales."},
+            {w: "Morph", d: "Efecto especial de animación que transforma suave y progresivamente una imagen o forma en otra diferente."},
+            {w: "Mixamo", d: "Plataforma web de Adobe que ofrece personajes 3D y permite aplicarles rigs y animaciones de forma automática."},
+            {w: "HDRI", d: "High Dynamic Range Image. Imagen panorámica que contiene información lumínica real, muy usada para iluminar entornos 3D."},
+            {w: "Shading", d: "Proceso en gráficos 3D que define cómo los materiales interactúan con la luz (color, brillo, texturas y sombras)."},
+            {w: "Medida REM", d: "Unidad de medida CSS relativa al tamaño de fuente del elemento raíz, ideal para diseño responsive."},
+            {w: "Juego 8 Bits", d: "Videojuego creado con gráficos pixelados de 8 bits, estilo retro de consolas antiguas como NES."},
+            {w: "Rigging", d: "Proceso de crear un esqueleto digital para un modelo 3D que permite animarlo con movimientos realistas."},
+            {w: "Elementor", d: "Constructor visual de WordPress que permite crear páginas web sin escribir código usando drag-and-drop."},
+            {w: "Spectra", d: "Plugin de WordPress que proporciona componentes avanzados para diseño y personalización de bloques."},
+            {w: "SSL", d: "Secure Sockets Layer. Protocolo de seguridad que cifra datos entre servidor y cliente (ahora usando TLS)."},
+            {w: "YoastSEO", d: "Plugin de WordPress que optimiza el contenido para buscadores, análisis de palabras clave y readability."},
+            {w: "Permalink", d: "URL permanente de una página o post que no cambia, importante para SEO y referencias externas."},
+            {w: "Excerpt", d: "Resumen breve de un post en WordPress que aparece en listas o previsualizaciones de contenido."},
+            {w: "H1-H6", d: "Etiquetas HTML que definen los encabezados, siendo H1 el más importante y H6 el menor en jerarquía."},
+            {w: "Google Analytics", d: "Herramienta de Google para rastrear y analizar el tráfico, comportamiento de usuarios y conversiones."},
+            {w: "Schema", d: "Marcado estructurado (JSON-LD) que ayuda a los buscadores a entender mejor el contenido de una página."},
+            {w: "Twitter Card", d: "Protocolo que define cómo se ve un enlace compartido en Twitter con título, imagen y descripción."},
+            {w: "Claude Code", d: "Asistente IA de Anthropic que ayuda con programación, análisis y generación de código."},
+            {w: "Scrollytelling", d: "Técnica narrativa web que sincroniza animaciones y contenido con el scroll del usuario para contar historias."},
+            {w: "FontAwesome", d: "Biblioteca de iconos vectoriales ampliamente usada en web para añadir símbolos y signos visuales."},
+            {w: "Google PageSpeed Insights", d: "Herramienta de Google que analiza la velocidad y rendimiento de una página web en desktop y móvil."},
+            {w: "Meta información", d: "Datos en el HEAD del HTML como meta description y meta keywords que los buscadores utilizan."},
+            {w: "Marketing de contenidos", d: "Estrategia que usa contenido relevante y valioso para atraer, mantener y convertir una audiencia clara."},
+            {w: "Font Atlas", d: "Imagen que contiene múltiples caracteres de una fuente, usada para renderizado eficiente de texto en 3D."},
+            {w: "Font Noto", d: "Familia de fuentes de Google que soporta casi todos los idiomas del mundo con excelente cobertura unicode."},
+            {w: "Marcador Hiro", d: "Código QR especial en realidad aumentada que sirve como punto de referencia para rastrear objetos 3D."},
+            {w: "VR Lenses", d: "Lentes ópticas especiales en cascos VR que distorsionan la imagen para crear efecto de campo visual amplio."},
+            {w: "AR Geolocalización", d: "Tecnología que combina realidad aumentada con ubicación GPS para superponer contenido en el mundo real."},
+            {w: "Equirectangular", d: "Formato de imagen 360° que representa una esfera completa, usado en fotografía panorámica y VR."},
+            {w: "Cámara ortográfica", d: "Tipo de proyección 3D sin perspectiva donde objetos mantienen tamaño independiente de su distancia."},
+            {w: "WebGPU", d: "API moderna de JavaScript para acceso de bajo nivel a la GPU, sucesor de WebGL con mejor rendimiento."}
+        ];
 
-        let currentInstrument = 'square'; // Default instrument
-        let currentDrum = 'kick';
+        let currentIndex = 0;
+        const timerDuration = 15;
+        const revealDuration = 7;
+        let timerAnimationId = null;
+        let revealTimeoutId = null;
+        let lastDangerSecond = -1;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let splitWordInstance = null;
 
-        // Estado del secuenciador
-        let gridState = Array(NUM_TRACKS).fill().map(() => Array(NUM_STEPS).fill(false));
-        let currentStep = 0;
-        let isPlaying = false;
-        let isDragging = false;
-        let dragValue = true; // true = pintar notas, false = borrarlas
-        
-        // Web Audio API
-        let audioCtx;
-        let masterGain;
-        let dryGain;
-        let wetGain;
-        let effectSendGain;
-        let delayNode;
-        let feedbackGain;
-        let convolverNode;
-        let reverbBypassGain;
-        let reverbWetGain;
-        let distortionNode;
-        let mediaStreamDestination;
-        let mediaRecorder;
-        let recordedChunks = [];
-        let isRecording = false;
+        const timerCircle = { element: null, radius: 32, circumference: 2 * Math.PI * 32 };
 
-        // Variables de temporización
-        let nextNoteTime = 0.0;
-        let timerID;
-        const lookahead = 25.0; // ms
-        const scheduleAheadTime = 0.1; // s
+        // Configuración de Lottie
+        const perfectLottie = lottie.loadAnimation({
+            container: document.getElementById('lottie-perfect'),
+            renderer: 'svg',
+            loop: false,
+            autoplay: false,
+            path: 'perfect.json'
+        });
 
-        const gridElement = document.getElementById('sequencer-grid');
+        function playSound(freq, type = 'sine', duration = 0.1) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
 
-        // --- INICIALIZAR LA INTERFAZ (DOM) ---
-        function renderGrid() {
-            gridElement.innerHTML = ''; // Limpiar la cuadrícula existente
-            const labelsColumn = document.getElementById('labels-column');
-            labelsColumn.innerHTML = '';
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startGame() {
+            document.body.classList.add('glitch-active');
             
-            // Generar columnas dinámicamente basadas en NUM_STEPS
-            let cols = '';
-            for (let i = 0; i < NUM_STEPS; i+=4) {
-                cols += 'repeat(4, var(--cell-size)) ';
-                if (i + 4 < NUM_STEPS) cols += '2px ';
+            // Efectos de sonido rápidos emulando estática/glitch
+            playSound(150, 'sawtooth', 0.1);
+            setTimeout(() => playSound(300, 'square', 0.1), 100);
+            
+            // Esperar a que acabe la animación (400ms) para iniciar el juego
+            setTimeout(() => {
+                document.body.classList.remove('glitch-active');
+                document.getElementById('start-screen').classList.remove('active');
+                document.getElementById('game-screen').classList.add('active');
+                timerCircle.element = document.querySelector('.timer-ring');
+                timerCircle.element.style.strokeDasharray = timerCircle.circumference;
+                shuffleArray(words);
+                showWord();
+                playSound(440, 'triangle', 0.2);
+            }, 400);
+        }
+
+        function showWord() {
+            clearTimers();
+            const card = document.getElementById('card');
+            card.classList.remove('flipped');
+            document.getElementById('bg-canvas').classList.remove('danger-glitch');
+            document.body.classList.remove('danger-vignette');
+            
+            // Alternar los fondos degradados de la tarjeta frontal
+            const cardFront = document.querySelector('.card-front');
+            if (currentIndex % 2 === 0) {
+                cardFront.classList.add('bg-gradient-1');
+                cardFront.classList.remove('bg-gradient-2');
+            } else {
+                cardFront.classList.add('bg-gradient-2');
+                cardFront.classList.remove('bg-gradient-1');
             }
-            gridElement.style.gridTemplateColumns = cols;
-
-            // --- NUEVO: Fila de encabezado para los números de paso ---
-            const emptyHeaderLabel = document.createElement('div');
-            emptyHeaderLabel.className = 'track-label';
-            emptyHeaderLabel.style.height = '20px';
-            labelsColumn.appendChild(emptyHeaderLabel);
-
-            for (let step = 0; step < NUM_STEPS; step++) {
-                if (step > 0 && step % 4 === 0) {
-                    const vDivider = document.createElement('div');
-                    vDivider.className = 'v-divider';
-                    gridElement.appendChild(vDivider);
-                }
-                const stepNumber = document.createElement('div');
-                stepNumber.className = 'step-header';
-                stepNumber.innerText = step + 1;
-                stepNumber.title = `Paso número ${step + 1}`;
-                gridElement.appendChild(stepNumber);
+            
+            // Revertir el texto animado anterior para que SplitType no restaure la palabra vieja
+            if (splitWordInstance) {
+                splitWordInstance.revert();
             }
 
-            const labelHeaderLine = document.createElement('div');
-            labelHeaderLine.className = 'h-divider';
-            labelsColumn.appendChild(labelHeaderLine);
-
-            const headerLine = document.createElement('div');
-            headerLine.className = 'h-divider';
-            gridElement.appendChild(headerLine);
-
-            for (let track = 0; track < NUM_TRACKS; track++) {
-                // Etiqueta de la pista
-                const label = document.createElement('div');
-                label.className = 'track-label';
-                label.innerText = track === NUM_TRACKS - 1 ? 'Drums' : `Track ${track + 1}`;
-                label.title = track === NUM_TRACKS - 1 ? 'Pista de Batería' : `Pista Melódica ${track + 1}`;
-                labelsColumn.appendChild(label);
-
-                // Celdas de la pista
-                for (let step = 0; step < NUM_STEPS; step++) {
-                    // Divisor vertical cada 4 cuartos
-                    if (step > 0 && step % 4 === 0) {
-                        const vDivider = document.createElement('div');
-                        vDivider.className = 'v-divider';
-                        gridElement.appendChild(vDivider);
-                    }
-
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    // Agrega la clase de fondo alternativo para bloques de 16 pasos impares
-                    if (Math.floor(step / 16) % 2 !== 0) {
-                        cell.classList.add('alt-quadrant');
-                    }
-                    cell.dataset.track = track;
-                    cell.dataset.step = step;
-                    cell.title = `Pista ${track === NUM_TRACKS - 1 ? 'Drums' : track + 1}, Paso ${step + 1}`;
-                    
-                    // Restaurar estado visual si la celda ya estaba activa (importante al añadir bloques)
-                    if (gridState[track][step]) {
-                        cell.style.backgroundColor = TRACK_COLORS[track];
-                        cell.style.boxShadow = `0 0 12px ${TRACK_COLORS[track]}80`;
-                    }
-                    
-                    cell.addEventListener('mousedown', (e) => {
-                        if (e.button !== 0) return; // Solo permitir clic izquierdo
-                        // Iniciar contexto de audio (política de navegadores)
-                        if (!audioCtx) initAudio();
-
-                        isDragging = true;
-                        const t = parseInt(cell.dataset.track);
-                        const s = parseInt(cell.dataset.step);
-                        
-                        // Determinamos si vamos a pintar o borrar basados en la celda inicial
-                        dragValue = !gridState[t][s];
-                        gridState[t][s] = dragValue; 
-                        
-                        if (dragValue) {
-                            cell.style.backgroundColor = TRACK_COLORS[t];
-                            cell.style.boxShadow = `0 0 12px ${TRACK_COLORS[t]}80`;
-                            playNote(t, audioCtx.currentTime);
-                        } else {
-                            cell.style.backgroundColor = '';
-                            cell.style.boxShadow = '';
+            document.getElementById('word-display').innerText = words[currentIndex].w;
+            document.getElementById('def-display').innerText = words[currentIndex].d;
+            document.getElementById('skip-btn').disabled = false;
+            document.getElementById('progress-text').innerText = `Palabra ${currentIndex + 1} de ${words.length}`;
+            
+            // Animación de GSAP + SplitType
+            splitWordInstance = new SplitType('#word-display', { types: 'chars' });
+            gsap.fromTo(splitWordInstance.chars, 
+                { y: 30, opacity: 0, rotationX: -90 },
+                { 
+                    y: 0, opacity: 1, rotationX: 0, 
+                    duration: 0.6, 
+                    ease: "back.out(2)",
+                    stagger: {
+                        each: 0.04, // Tiempo entre cada letra
+                        onStart: function() {
+                            // Pequeño bip aleatorio por cada letra que aparece
+                            playSound(600 + Math.random() * 400, 'triangle', 0.05);
                         }
-                    });
-
-                    cell.addEventListener('mouseenter', () => {
-                        if (isDragging) {
-                            const t = parseInt(cell.dataset.track);
-                            const s = parseInt(cell.dataset.step);
-                            
-                            if (gridState[t][s] !== dragValue) {
-                                gridState[t][s] = dragValue;
-                                if (dragValue) {
-                                    cell.style.backgroundColor = TRACK_COLORS[t];
-                                    cell.style.boxShadow = `0 0 12px ${TRACK_COLORS[t]}80`;
-                                    playNote(t, audioCtx.currentTime);
-                                } else {
-                                    cell.style.backgroundColor = '';
-                                    cell.style.boxShadow = '';
-                                }
-                            }
-                        }
-                    });
-
-                    gridElement.appendChild(cell);
-                }
-
-                // Divisor horizontal después del track 8 (índice 7) antes de los Drums
-                if (track === 7) {
-                    const labelHDivider = document.createElement('div');
-                    labelHDivider.className = 'h-divider';
-                    labelsColumn.appendChild(labelHDivider);
-                    
-                    const hDivider = document.createElement('div');
-                    hDivider.className = 'h-divider';
-                    gridElement.appendChild(hDivider);
-                }
-            }
-        }
-
-        // --- MOTOR DE AUDIO ---
-        function initAudio() {
-            if (audioCtx) {
-                audioCtx.close(); // Cerramos el contexto anterior si existe para silenciar colas de sonido previas
-            }
-
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            masterGain = audioCtx.createGain();
-            masterGain.gain.value = 1.0; // Volumen inicial equilibrado
-
-            dryGain = audioCtx.createGain();
-            wetGain = audioCtx.createGain();
-            effectSendGain = audioCtx.createGain();
-            effectSendGain.gain.value = 0;
-            wetGain.gain.value = 1;
-
-            // Crear nodos de efectos
-            delayNode = audioCtx.createDelay(1);
-            delayNode.delayTime.value = 0;
-            feedbackGain = audioCtx.createGain();
-            feedbackGain.gain.value = 0;
-            delayNode.connect(feedbackGain);
-            feedbackGain.connect(delayNode);
-
-            convolverNode = audioCtx.createConvolver();
-            reverbBypassGain = audioCtx.createGain();
-            reverbWetGain = audioCtx.createGain();
-            reverbBypassGain.gain.value = 1;
-            reverbWetGain.gain.value = 0;
-
-            distortionNode = audioCtx.createWaveShaper();
-            distortionNode.curve = makeDistortionCurve(0);
-            distortionNode.oversample = '4x';
-
-            // Cadena seca y cadena de efectos
-            masterGain.connect(dryGain);
-            masterGain.connect(effectSendGain);
-            dryGain.connect(audioCtx.destination);
-            
-            effectSendGain.connect(delayNode);
-            delayNode.connect(reverbBypassGain);
-            delayNode.connect(convolverNode);
-            convolverNode.connect(reverbWetGain);
-            reverbBypassGain.connect(distortionNode);
-            reverbWetGain.connect(distortionNode);
-            
-            distortionNode.connect(wetGain);
-            wetGain.connect(audioCtx.destination);
-
-            // Configurar nodo de grabación para exportar el track
-            mediaStreamDestination = audioCtx.createMediaStreamDestination();
-            dryGain.connect(mediaStreamDestination);
-            wetGain.connect(mediaStreamDestination);
-
-            // Sincronizar el estado actual de los controles de UI con el nuevo contexto
-            document.getElementById('master-gain').dispatchEvent(new Event('input'));
-            document.getElementById('delay-time').dispatchEvent(new Event('input'));
-            document.getElementById('delay-feedback').dispatchEvent(new Event('input'));
-            document.getElementById('delay-enable').dispatchEvent(new Event('change'));
-            document.getElementById('reverb-enable').dispatchEvent(new Event('change'));
-            document.getElementById('distortion-amount').dispatchEvent(new Event('input'));
-            document.getElementById('distortion-enable').dispatchEvent(new Event('change'));
-        }
-
-        function makeDistortionCurve(amount) {
-            const k = typeof amount === 'number' ? amount : (parseFloat(amount) || 0);
-            const n_samples = 44100;
-            const curve = new Float32Array(n_samples);
-            const deg = Math.PI / 180;
-            if (k === 0) {
-                // Identity
-                for (let i = 0; i < n_samples; ++i) {
-                    const x = i * 2 / n_samples - 1;
-                    curve[i] = x;
-                }
-            } else {
-                for (let i = 0; i < n_samples; ++i) {
-                    const x = i * 2 / n_samples - 1;
-                    curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
-                }
-            }
-            return curve;
-        }
-
-        function playNote(trackIndex, time) {
-            const noteGain = audioCtx.createGain();
-
-            if (trackIndex === NUM_TRACKS - 1) { // Pista de batería
-                if (currentDrum === 'kick') {
-                    const osc = audioCtx.createOscillator();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(150, time);
-                    osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.1);
-                    noteGain.gain.setValueAtTime(1.0, time);
-                    noteGain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
-                    osc.connect(noteGain);
-                    osc.start(time);
-                    osc.stop(time + 0.1);
-                } else if (currentDrum === 'snare') {
-                    const osc = audioCtx.createOscillator();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(250, time);
-                    osc.connect(noteGain);
-                    osc.start(time);
-                    osc.stop(time + 0.1);
-                    
-                    const bufferSize = audioCtx.sampleRate * 0.1;
-                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                    const output = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
-                    const noise = audioCtx.createBufferSource();
-                    noise.buffer = buffer;
-                    noise.connect(noteGain);
-                    noise.start(time);
-                    
-                    noteGain.gain.setValueAtTime(1.0, time);
-                    noteGain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
-                } else if (currentDrum === 'hihat') {
-                    const bufferSize = audioCtx.sampleRate * 0.05;
-                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                    const output = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
-                    const noise = audioCtx.createBufferSource();
-                    noise.buffer = buffer;
-                    
-                    const filter = audioCtx.createBiquadFilter();
-                    filter.type = 'highpass';
-                    filter.frequency.value = 5000;
-                    
-                    noise.connect(filter);
-                    filter.connect(noteGain);
-                    noise.start(time);
-                    
-                    noteGain.gain.setValueAtTime(0.5, time);
-                    noteGain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
-                } else if (currentDrum === 'tom') {
-                    const osc = audioCtx.createOscillator();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(200, time);
-                    osc.frequency.exponentialRampToValueAtTime(50, time + 0.15);
-                    noteGain.gain.setValueAtTime(1.0, time);
-                    noteGain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
-                    osc.connect(noteGain);
-                    osc.start(time);
-                    osc.stop(time + 0.15);
-                } else if (currentDrum === 'clap') {
-                    const bufferSize = audioCtx.sampleRate * 0.15;
-                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                    const output = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
-                    const noise = audioCtx.createBufferSource();
-                    noise.buffer = buffer;
-                    
-                    const filter = audioCtx.createBiquadFilter();
-                    filter.type = 'bandpass';
-                    filter.frequency.value = 1500;
-                    
-                    noise.connect(filter);
-                    filter.connect(noteGain);
-                    noise.start(time);
-                    
-                    noteGain.gain.setValueAtTime(1.0, time);
-                    noteGain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
-                } else if (currentDrum === 'crash') {
-                    const bufferSize = audioCtx.sampleRate * 0.5;
-                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                    const output = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
-                    const noise = audioCtx.createBufferSource();
-                    noise.buffer = buffer;
-                    
-                    const filter = audioCtx.createBiquadFilter();
-                    filter.type = 'highpass';
-                    filter.frequency.value = 4000;
-                    
-                    noise.connect(filter);
-                    filter.connect(noteGain);
-                    noise.start(time);
-                    
-                    noteGain.gain.setValueAtTime(0.8, time);
-                    noteGain.gain.exponentialRampToValueAtTime(0.001, time + 0.5);
-                } else if (currentDrum === 'cowbell') {
-                    const osc1 = audioCtx.createOscillator();
-                    const osc2 = audioCtx.createOscillator();
-                    osc1.type = 'square';
-                    osc2.type = 'square';
-                    osc1.frequency.setValueAtTime(800, time);
-                    osc2.frequency.setValueAtTime(540, time);
-                    
-                    osc1.connect(noteGain);
-                    osc2.connect(noteGain);
-                    osc1.start(time);
-                    osc2.start(time);
-                    osc1.stop(time + 0.1);
-                    osc2.stop(time + 0.1);
-                    
-                    noteGain.gain.setValueAtTime(0.3, time);
-                    noteGain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
-                }
-                noteGain.connect(masterGain);
-                return;
-            }
-
-            // Configuración dinámica por instrumento para que se noten las diferencias
-            let envAttack = 0.006;
-            let envDecay = 0.08;
-            let peakVol = 1.0;
-            let freqMultiplier = 1.0;
-            let oscType = 'square';
-            
-            if (currentInstrument === 'chip-lead') {
-                oscType = 'sawtooth';
-                envAttack = 0.01;
-                envDecay = 0.16;
-                peakVol = 1.6;
-            } else if (currentInstrument === 'chip-pad') {
-                oscType = 'triangle';
-                envAttack = 0.02;
-                envDecay = 0.25;
-                peakVol = 1.2;
-            } else if (currentInstrument === 'chip-bass') {
-                oscType = 'square';
-                freqMultiplier = 0.25; // 2 octavas más grave para el bajo
-                envDecay = 0.15;
-            } else if (currentInstrument === 'computer-beep') {
-                oscType = 'square';
-                freqMultiplier = 2.0; // 1 octava más aguda para el beep
-                envAttack = 0.001; // Ataque instantáneo
-                envDecay = 0.04; // Decaimiento cortísimo, casi percusivo
-                peakVol = 0.5; // Volumen un poco más bajo por ser frecuencia alta
-            } else if (currentInstrument === 'chimes') {
-                oscType = 'sine'; // Onda senoidal pura para que suene dulce
-                freqMultiplier = 2.0; // 1 octava más aguda para el brillo característico
-                envAttack = 0.05; // Ataque suave (como golpear con una baqueta de fieltro)
-                envDecay = 1.5; // Decaimiento muy largo para simular resonancia prolongada
-                peakVol = 0.7; // Volumen moderado para no aturdir (es una frecuencia aguda)
-        } else if (currentInstrument === 'accordion-8bit') {
-            oscType = 'sawtooth'; // Onda de sierra para imitar las lengüetas del acordeón
-            envAttack = 0.08; // Ataque más lento imitando el aire entrando al fuelle
-            envDecay = 0.35; // Mayor sostenimiento de la nota
-            peakVol = 0.8; // Volumen controlado
-        } else if (currentInstrument === 'piano-8bit') {
-            oscType = 'triangle'; // Onda triangular para un tono percusivo y limpio
-            envAttack = 0.005; // Ataque muy rápido simulando el golpe del martillo
-            envDecay = 0.5; // Decaimiento medio-largo simulando resonancia
-            peakVol = 1.2; // Compensación de volumen
-            } else if (currentInstrument !== 'noise') {
-                // square, triangle, sawtooth, sine, pulse
-                oscType = currentInstrument === 'pulse' ? 'square' : currentInstrument;
-                envDecay = 0.15; // Mayor duración para percibir bien la forma de onda
-            }
-
-            noteGain.gain.setValueAtTime(0, time);
-            noteGain.gain.linearRampToValueAtTime(peakVol, time + envAttack);
-            noteGain.gain.exponentialRampToValueAtTime(0.001, time + envAttack + envDecay);
-
-            if (currentInstrument === 'noise') {
-                // Generate white noise
-                const bufferSize = audioCtx.sampleRate * (envAttack + envDecay);
-                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                const output = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    output[i] = Math.random() * 2 - 1;
-                }
-                const noiseSource = audioCtx.createBufferSource();
-                noiseSource.buffer = buffer;
-                noiseSource.connect(noteGain);
-                noiseSource.start(time);
-            } else {
-                const osc = audioCtx.createOscillator();
-                osc.type = oscType;
-                osc.frequency.value = TRACK_FREQUENCIES[trackIndex] * freqMultiplier;
-                osc.connect(noteGain);
-                osc.start(time);
-                osc.stop(time + envAttack + envDecay + 0.05);
-            }
-
-            noteGain.connect(masterGain);
-        }
-
-        // --- SISTEMA DE SECUENCIACIÓN (Scheduler) ---
-        function nextNote() {
-            const secondsPerBeat = 60.0 / TEMPO;
-            // 4/4 tiempo: cada celda es una semicorchea (1/4 de un beat)
-            nextNoteTime += 0.25 * secondsPerBeat;
-            currentStep++;
-            if (currentStep >= NUM_STEPS) {
-                currentStep = 0;
-                
-                // Si estamos grabando, detener en el primer bucle completado
-                if (isRecording) {
-                    isPlaying = false; // Detiene el programador de notas
-                    document.getElementById('btn-play').innerText = '▶ Play';
-                    clearUI();
-                    
-                    // Añadimos tiempo de "cola" si hay efectos de tiempo activos (Reverb o Delay) o instrumentos con resonancia larga
-                    const hasEffects = document.getElementById('delay-enable').checked || document.getElementById('reverb-enable').checked;
-                    const hasLongDecay = currentInstrument === 'chimes';
-                    const tailTime = hasEffects ? 3.0 : (hasLongDecay ? 2.0 : 0.0); // Tiempo extra para que se desvanezcan los efectos o notas largas
-                    const stopTimeMs = Math.max(0, (nextNoteTime - audioCtx.currentTime + tailTime)) * 1000;
-                    
-                    setTimeout(() => {
-                        if (isRecording) {
-                            mediaRecorder.stop();
-                            isRecording = false;
-                            document.getElementById('btn-record').classList.remove('recording');
-                            document.getElementById('btn-record').innerText = '⏺ Grabar a Audio';
-                        }
-                    }, stopTimeMs);
-                }
-            }
-        }
-
-        function scheduleNote(stepNumber, time) {
-            // Animación visual sincronizada
-            requestAnimationFrame(() => updateUI(stepNumber));
-
-            // Reproducir sonidos activos en esta columna
-            for (let track = 0; track < NUM_TRACKS; track++) {
-                if (gridState[track][stepNumber]) {
-                    playNote(track, time);
-                }
-            }
-        }
-
-        function scheduler() {
-            // Solo programar si el secuenciador sigue en estado de reproducción
-            while (isPlaying && nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
-                scheduleNote(currentStep, nextNoteTime);
-                nextNote();
-            }
-            if (isPlaying) {
-                timerID = setTimeout(scheduler, lookahead);
-            }
-        }
-
-        function updateUI(stepNumber) {
-            // Remover la clase 'current' de la columna anterior
-            const prevStep = stepNumber === 0 ? NUM_STEPS - 1 : stepNumber - 1;
-            document.querySelectorAll(`.cell[data-step="${prevStep}"]`).forEach(el => {
-                el.classList.remove('current', 'playing');
-            });
-            
-            // Añadir la clase 'current' a la columna actual
-            const currentCells = document.querySelectorAll(`.cell[data-step="${stepNumber}"]`);
-            currentCells.forEach(el => {
-                el.classList.add('current');
-                const track = parseInt(el.dataset.track);
-                if (gridState[track][stepNumber]) {
-                    el.classList.add('playing');
-                }
-            });
-            
-            // Auto-scroll horizontal al reproducir
-            const container = document.querySelector('.sequencer-container');
-            if (currentCells.length > 0 && container) {
-                const cell = currentCells[0];
-                const cellLeft = cell.offsetLeft;
-                const cellWidth = cell.offsetWidth;
-                
-                if (cellLeft < container.scrollLeft || (cellLeft + cellWidth) > (container.scrollLeft + container.clientWidth)) {
-                    container.scrollLeft = cellLeft - (container.clientWidth / 2) + (cellWidth / 2);
-                }
-            }
-        }
-
-        function clearUI() {
-            document.querySelectorAll('.cell').forEach(el => el.classList.remove('current', 'playing'));
-        }
-
-        // --- CONTROLES DE REPRODUCCIÓN Y GRABACIÓN ---
-        document.getElementById('btn-play').addEventListener('click', () => {
-            if (!audioCtx) initAudio();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            if (!isPlaying) {
-                isPlaying = true;
-                document.getElementById('btn-play').innerText = '⏸ Pause';
-                nextNoteTime = audioCtx.currentTime + 0.05;
-                scheduler();
-            } else {
-                isPlaying = false;
-                document.getElementById('btn-play').innerText = '▶ Play';
-                clearTimeout(timerID);
-            }
-        });
-
-        document.getElementById('btn-reset').addEventListener('click', () => {
-            // Crear popup de confirmación
-            const confirmPopup = document.createElement('div');
-            confirmPopup.style.position = 'fixed';
-            confirmPopup.style.top = '50%';
-            confirmPopup.style.left = '50%';
-            confirmPopup.style.transform = 'translate(-50%, -50%)';
-            confirmPopup.style.backgroundColor = 'var(--panel-bg)';
-            confirmPopup.style.padding = '20px';
-            confirmPopup.style.borderRadius = '12px';
-            confirmPopup.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.5)';
-            confirmPopup.style.zIndex = '1000';
-            confirmPopup.innerHTML = `
-                <p style="color: #e0e0e0; margin: 0 0 20px 0; text-align: center;">¿Estás seguro de que quieres limpiar toda la secuencia?</p>
-                <div style="display: flex; justify-content: center; gap: 15px;">
-                    <button id="confirm-yes" style="background-color: #f44336; color: white; border: none; padding: 10px 30px; border-radius: 50px; cursor: pointer;">Sí</button>
-                    <button id="confirm-no" style="background-color: #000; color: white; border: 1px solid #777777; padding: 10px 30px; border-radius: 50px; cursor: pointer;">No</button>
-                </div>
-            `;
-            document.body.appendChild(confirmPopup);
-
-            document.getElementById('confirm-yes').addEventListener('click', () => {
-                // Limpiar toda la secuencia
-                gridState = gridState.map(track => track.map(() => false));
-                // Resetear UI
-                document.querySelectorAll('.cell').forEach(cell => {
-                    cell.style.backgroundColor = '';
-                    cell.style.boxShadow = '';
-                });
-                currentStep = 0;
-                clearUI();
-                if (isPlaying) {
-                    nextNoteTime = audioCtx.currentTime + 0.05;
-                }
-                document.body.removeChild(confirmPopup);
-            });
-
-            document.getElementById('confirm-no').addEventListener('click', () => {
-                document.body.removeChild(confirmPopup);
-            });
-        });
-
-        document.getElementById('btn-add-quadrant').addEventListener('click', () => {
-            NUM_STEPS += 16;
-            for (let track = 0; track < NUM_TRACKS; track++) {
-                gridState[track].push(...Array(16).fill(false));
-            }
-            renderGrid();
-        });
-
-        document.getElementById('btn-remove-quadrant').addEventListener('click', () => {
-            if (NUM_STEPS > 16) {
-                NUM_STEPS -= 16;
-                for (let track = 0; track < NUM_TRACKS; track++) {
-                    gridState[track] = gridState[track].slice(0, NUM_STEPS);
-                }
-                if (currentStep >= NUM_STEPS) {
-                    currentStep = 0;
-                }
-                renderGrid();
-            }
-        });
-
-        document.getElementById('instrument-select').addEventListener('change', (e) => {
-            currentInstrument = e.target.value;
-        });
-
-        document.getElementById('drum-select').addEventListener('change', (e) => {
-            currentDrum = e.target.value;
-        });
-
-        const recordBtn = document.getElementById('btn-record');
-        const downloadLink = document.getElementById('download-link');
-
-        recordBtn.addEventListener('click', () => {
-            if (!isRecording) {
-                // Reiniciar el motor de audio para limpiar ecos/reverb y asegurar una grabación limpia
-                initAudio();
-                
-                // Resetear al inicio para grabar desde el principio
-                currentStep = 0;
-                clearUI();
-                nextNoteTime = audioCtx.currentTime + 0.05;
-
-                // Empezar a grabar
-                recordedChunks = [];
-                let mimeType = 'audio/ogg;codecs=opus';
-                let ext = 'ogg'; // Forzamos que el archivo termine siempre en .ogg
-                
-                // Preferir OGG, o WebM como alternativa si el navegador no soporta OGG nativamente para grabar
-                if (!MediaRecorder.isTypeSupported(mimeType)) {
-                    if (MediaRecorder.isTypeSupported('audio/ogg')) {
-                        mimeType = 'audio/ogg';
-                    } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-                        mimeType = 'audio/webm;codecs=opus';
-                    } else if (MediaRecorder.isTypeSupported('audio/webm')) {
-                        mimeType = 'audio/webm';
                     }
                 }
+            );
 
-                mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, { mimeType: mimeType });
-                
-                mediaRecorder.ondataavailable = (e) => {
-                    if (e.data.size > 0) recordedChunks.push(e.data);
-                };
+            updateTimerUI(timerDuration);
+            startTimer();
+        }
 
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: mimeType.split(';')[0] });
-                    const url = URL.createObjectURL(blob);
-                    downloadLink.href = url;
-                    downloadLink.download = `chipmunk_track.${ext}`;
-                    downloadLink.style.display = 'block';
-                    downloadLink.innerText = `⬇ Descargar Pista de Audio (${ext.toUpperCase()})`;
-                };
+        function skipTimer(event) {
+            if (event) event.stopPropagation();
+            if (document.getElementById('card').classList.contains('flipped')) return;
+            document.getElementById('skip-btn').disabled = true;
+            revealAnswer();
+        }
 
-                mediaRecorder.start();
-                isRecording = true;
-                recordBtn.classList.add('recording');
-                recordBtn.innerText = '⏹ Detener Grabación';
-                downloadLink.style.display = 'none';
-
-                // Iniciar reproducción automáticamente al grabar
-                if (!isPlaying) {
-                    isPlaying = true;
-                    document.getElementById('btn-play').innerText = '⏸ Pause';
-                    scheduler();
-                }
-
-            } else {
-                // Detener grabación
-                mediaRecorder.stop();
-                isRecording = false;
-                recordBtn.classList.remove('recording');
-                recordBtn.innerText = '⏺ Grabar a Audio';
+        function handleCardClick() {
+            const card = document.getElementById('card');
+            if (card.classList.contains('flipped')) {
+                clearTimers();
+                nextWord();
             }
-        });
+        }
 
-        // Efectos
-        document.getElementById('delay-enable').addEventListener('change', (e) => {
-            if (delayNode) {
-                if (e.target.checked) {
-                    effectSendGain.gain.value = 1;
-                    delayNode.delayTime.value = parseFloat(document.getElementById('delay-time').value);
-                    feedbackGain.gain.value = parseFloat(document.getElementById('delay-feedback').value);
+        function startTimer() {
+            const startTime = performance.now();
+
+            function tick(now) {
+                const elapsed = (now - startTime) / 1000;
+                const remaining = Math.max(0, timerDuration - elapsed);
+                updateTimerUI(remaining);
+
+                if (remaining <= 0) {
+                    revealAnswer();
                 } else {
-                    delayNode.delayTime.value = 0;
-                    feedbackGain.gain.value = 0;
-                    if (!document.getElementById('reverb-enable').checked && !document.getElementById('distortion-enable').checked) {
-                        effectSendGain.gain.value = 0;
-                    }
+                    timerAnimationId = requestAnimationFrame(tick);
+                }
+            }
+
+            timerAnimationId = requestAnimationFrame(tick);
+        }
+
+        function updateTimerUI(seconds) {
+            const timerText = document.getElementById('timer-text');
+            const rounded = Math.ceil(seconds);
+            timerText.innerText = rounded;
+            const offset = timerCircle.circumference * (1 - seconds / timerDuration);
+            timerCircle.element.style.strokeDashoffset = offset.toFixed(2);
+            
+            if (rounded <= 5 && rounded > 0) {
+                timerCircle.element.classList.add('danger');
+                timerText.style.fill = 'var(--group1)';
+                document.getElementById('bg-canvas').classList.add('danger-glitch');
+                document.body.classList.add('danger-vignette');
+                
+                if (lastDangerSecond !== rounded) {
+                    playSound(400, 'triangle', 0.1); // Sonido sutil de advertencia
+                    lastDangerSecond = rounded;
+                }
+            } else {
+                timerCircle.element.classList.remove('danger');
+                timerText.style.fill = 'var(--text)';
+                document.getElementById('bg-canvas').classList.remove('danger-glitch');
+                document.body.classList.remove('danger-vignette');
+                lastDangerSecond = -1;
+            }
+        }
+
+        function revealAnswer() {
+            clearTimers();
+            document.getElementById('skip-btn').disabled = true;
+            const card = document.getElementById('card');
+            card.classList.add('flipped');
+            document.getElementById('bg-canvas').classList.remove('danger-glitch');
+            document.body.classList.remove('danger-vignette');
+            playSound(600, 'sine', 0.15);
+            perfectLottie.goToAndPlay(0, true); // Reproduce la animación desde el inicio
+            revealTimeoutId = setTimeout(() => {
+                nextWord();
+            }, revealDuration * 1000);
+        }
+
+        function nextWord() {
+            if (currentIndex < words.length - 1) {
+                currentIndex++;
+                showWord();
+                playSound(800, 'sine', 0.1);
+            } else {
+                showEnd();
+            }
+        }
+
+        function clearTimers() {
+            if (timerAnimationId) {
+                cancelAnimationFrame(timerAnimationId);
+                timerAnimationId = null;
+            }
+            if (revealTimeoutId) {
+                clearTimeout(revealTimeoutId);
+                revealTimeoutId = null;
+            }
+        }
+
+        function showEnd() {
+            clearTimers();
+            document.getElementById('game-screen').classList.remove('active');
+            document.getElementById('end-screen').classList.add('active');
+            playSound(523.25, 'sine', 0.5);
+        }
+
+        // Soporte para teclado (Barra espaciadora para interactuar)
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                const gameScreen = document.getElementById('game-screen');
+                const startScreen = document.getElementById('start-screen');
+                if (startScreen.classList.contains('active')) {
+                    startGame();
+                } else if (gameScreen.classList.contains('active')) {
+                    const card = document.getElementById('card');
+                    if (card.classList.contains('flipped')) handleCardClick();
+                    else skipTimer();
                 }
             }
         });
-        document.getElementById('delay-time').addEventListener('input', (e) => {
-            if (delayNode && document.getElementById('delay-enable').checked) {
-                delayNode.delayTime.value = parseFloat(e.target.value);
+
+        // Three.js Background Animation
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const particleCount = 500;
+        const velocities = [];
+        const trails = [];
+        const trailLength = 50; // Increased for more noticeable trails
+
+        // Agrupar partículas para separarlas de los elementos estáticos (como el texto)
+        const particleGroup = new THREE.Group();
+        scene.add(particleGroup);
+
+        const tetraGeometry = new THREE.TetrahedronGeometry(0.05); // Small tetrahedrons
+        const tetraMaterial = new THREE.MeshBasicMaterial(); // Will set color per instance
+        const instancedMesh = new THREE.InstancedMesh(tetraGeometry, tetraMaterial, particleCount);
+        particleGroup.add(instancedMesh);
+
+        const dummy = new THREE.Object3D();
+
+        function getParticleColor(type) {
+            if (type === 'cyan') return new THREE.Color().setHSL(190 / 360, 1, 0.5);
+            if (type === 'lilas') return new THREE.Color().setHSL(300 / 360, 1, 0.5);
+            if (type === 'plata') return new THREE.Color(0.7, 0.7, 0.7); // Silver gray
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            const colorType = ['cyan', 'lilas', 'plata'][Math.floor(Math.random() * 3)];
+            velocities.push({
+                x: (Math.random() - 0.5) * 0.02,
+                y: (Math.random() - 0.5) * 0.02,
+                z: (Math.random() - 0.5) * 0.02,
+                colorType: colorType,
+                history: []
+            });
+
+            // Trail
+            const trailPositions = new Float32Array(trailLength * 3);
+            const trailColors = new Float32Array(trailLength * 3);
+            const trailGeometry = new THREE.BufferGeometry();
+            trailGeometry.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+            trailGeometry.setAttribute('color', new THREE.BufferAttribute(trailColors, 3));
+            const trailMaterial = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1 }); // More opaque for noticeable trails
+            const trail = new THREE.Line(trailGeometry, trailMaterial);
+            particleGroup.add(trail);
+            trails.push(trail);
+
+            // Initial position and scale
+            const scale = Math.random() * 0.8 + 0.2; // Random scale between 0.2 and 1.0
+            dummy.position.set((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
+            dummy.scale.set(scale, scale, scale);
+            dummy.updateMatrix();
+            instancedMesh.setMatrixAt(i, dummy.matrix);
+            const initialColor = getParticleColor(velocities[i].colorType);
+            instancedMesh.setColorAt(i, initialColor);
+            velocities[i].history.push(dummy.position.clone());
+        }
+
+        instancedMesh.instanceMatrix.needsUpdate = true;
+        instancedMesh.instanceColor.needsUpdate = true;
+
+        // Luces para el material del texto 3D
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(0, 10, 10);
+        scene.add(dirLight);
+
+        // Función para actualizar la escala del texto según la pantalla
+        function updateTextScale() {
+            if (!textGroup) return;
+            let scaleBase, yPos;
+            if (window.innerWidth <= 480) {
+                scaleBase = 0.45;
+                yPos = 1.4;
+            } else if (window.innerWidth <= 768) {
+                scaleBase = 0.65;
+                yPos = 1.2;
+            } else {
+                scaleBase = 0.9;
+                yPos = 1.0;
             }
-        });
-        document.getElementById('delay-feedback').addEventListener('input', (e) => {
-            if (feedbackGain && document.getElementById('delay-enable').checked) {
-                feedbackGain.gain.value = parseFloat(e.target.value);
-            }
-        });
-        document.getElementById('reverb-enable').addEventListener('change', (e) => {
-            if (convolverNode) {
-                if (e.target.checked) {
-                    const reverbBuffer = audioCtx.createBuffer(2, audioCtx.sampleRate * 2, audioCtx.sampleRate);
-                    for (let channel = 0; channel < reverbBuffer.numberOfChannels; channel++) {
-                        const channelData = reverbBuffer.getChannelData(channel);
-                        for (let i = 0; i < channelData.length; i++) {
-                            channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / channelData.length, 2);
-                        }
-                    }
-                    convolverNode.buffer = reverbBuffer;
-                    reverbBypassGain.gain.value = 0;
-                    reverbWetGain.gain.value = 1;
-                    effectSendGain.gain.value = 1;
-                } else {
-                    reverbBypassGain.gain.value = 1;
-                    reverbWetGain.gain.value = 0;
-                    if (!document.getElementById('delay-enable').checked && !document.getElementById('distortion-enable').checked) {
-                        effectSendGain.gain.value = 0;
-                    }
-                }
-            }
-        });
-        document.getElementById('distortion-enable').addEventListener('change', (e) => {
-            if (distortionNode) {
-                if (e.target.checked) {
-                    effectSendGain.gain.value = 1;
-                    distortionNode.curve = makeDistortionCurve(document.getElementById('distortion-amount').value);
-                } else {
-                    distortionNode.curve = makeDistortionCurve(0);
-                    if (!document.getElementById('delay-enable').checked && !document.getElementById('reverb-enable').checked) {
-                        effectSendGain.gain.value = 0;
-                    }
-                }
-            }
-        });
-        document.getElementById('distortion-amount').addEventListener('input', (e) => {
-            if (distortionNode && document.getElementById('distortion-enable').checked) {
-                distortionNode.curve = makeDistortionCurve(e.target.value);
-            }
-        });
-        document.getElementById('master-gain').addEventListener('input', (e) => {
-            if (masterGain) masterGain.gain.value = e.target.value;
+            textGroup.scale.set(scaleBase, scaleBase, scaleBase);
+            textGroup.position.y = yPos;
+        }
+
+        // Cargar fuente y crear Texto 3D
+        let textGroup, textMat, electricMat;
+        const fontLoader = new THREE.FontLoader();
+        fontLoader.load('https://unpkg.com/three@0.128.0/examples/fonts/optimer_bold.typeface.json', function(font) {
+            const textGeo = new THREE.TextGeometry('TECH TRIVIA', {
+                font: font,
+                size: 0.5,
+                height: 0.15, // Nivel de extrusión (profundidad 3D)
+                curveSegments: 12,
+                bevelEnabled: true,
+                bevelThickness: 0.02,
+                bevelSize: 0.01,
+                bevelOffset: 0,
+                bevelSegments: 5
+            });
+            textGeo.computeBoundingBox();
+            const centerOffset = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
+            
+            textMat = new THREE.MeshPhongMaterial({ color: 0x8841f9, specular: 0xffffff, shininess: 50, emissive: 0x000000 });
+            const textMesh = new THREE.Mesh(textGeo, textMat);
+            textMesh.position.x = centerOffset;
+            
+            // Malla de alambre (Wireframe) para el efecto de electricidad
+            electricMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true, transparent: true, opacity: 0 });
+            const electricMesh = new THREE.Mesh(textGeo, electricMat);
+            textMesh.add(electricMesh); // Se añade como hijo para que comparta la posición del texto original
+
+            textGroup = new THREE.Group();
+            textGroup.add(textMesh);
+            textGroup.position.z = 2; // Acercarlo a la cámara
+            scene.add(textGroup);
+            updateTextScale();
         });
 
-        // Guardar y Cargar Proyecto JSON
-        document.getElementById('btn-save').addEventListener('click', () => {
-            const projectData = {
-                numSteps: NUM_STEPS,
-                gridState: gridState,
-                instrument: currentInstrument,
-                drum: currentDrum,
-                tempo: TEMPO
-            };
-            const blob = new Blob([JSON.stringify(projectData)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "chipmunk_project.json";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        });
+        camera.position.z = 5;
 
-        document.getElementById('btn-load').addEventListener('click', () => {
-            document.getElementById('file-load').click();
-        });
+        function animate() {
+            requestAnimationFrame(animate);
 
-        document.getElementById('file-load').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+            // Constant rotation of the particle system
+            particleGroup.rotation.y += 0.005;
 
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const projectData = JSON.parse(event.target.result);
-                    if (projectData && projectData.gridState) {
-                        NUM_STEPS = projectData.numSteps || projectData.gridState[0].length;
-                        gridState = projectData.gridState;
-                        if (projectData.instrument) {
-                            currentInstrument = projectData.instrument;
-                            document.getElementById('instrument-select').value = currentInstrument;
-                        }
-                        if (projectData.drum) {
-                            currentDrum = projectData.drum;
-                            document.getElementById('drum-select').value = currentDrum;
-                        }
-                        if (projectData.tempo) {
-                            TEMPO = projectData.tempo;
-                            document.getElementById('tempo-input').value = TEMPO;
-                        }
-                        currentStep = 0;
-                        clearUI();
-                        renderGrid();
+            // Animar y posicionar el texto 3D
+            if (textGroup) {
+                const time = Date.now() * 0.001;
+                // Rotación ligera y constante (flotación)
+                textGroup.rotation.y = Math.sin(time) * 0.15; 
+                textGroup.rotation.x = Math.cos(time * 0.8) * 0.1;
+                
+                // Efecto de electricidad (Zap) periódico
+                if (textMat && electricMat) {
+                    const cycle = time % 4; // Ocurre un ciclo cada 4 segundos
+                    if (cycle < 0.25) { // Durante 0.25 segundos hace el "glitch" eléctrico
+                        const isZap = Math.random() > 0.4; // Probabilidad errática de parpadeo
+                        electricMat.opacity = isZap ? 0.5 + Math.random() * 0.5 : 0;
+                        textMat.emissive.setHex(isZap ? 0x38bdf8 : 0x000000); // El núcleo brilla cyan
+                        textMat.emissiveIntensity = isZap ? 0.8 : 0;
                     } else {
-                        alert('El archivo no tiene el formato de proyecto correcto.');
+                        // Apagar efecto el resto del tiempo
+                        electricMat.opacity = 0;
+                        textMat.emissive.setHex(0x000000);
                     }
-                } catch (err) {
-                    alert('Error al leer el archivo de proyecto.');
-                    console.error(err);
                 }
-            };
-            reader.readAsText(file);
-            e.target.value = ''; // Resetear para permitir cargar el mismo archivo de nuevo
-        });
 
-        document.getElementById('tempo-input').addEventListener('input', (e) => {
-            const newTempo = parseInt(e.target.value);
-            if (newTempo >= 40 && newTempo <= 300) {
-                TEMPO = newTempo;
+                // Mostrar el texto 3D solo cuando la pantalla de inicio está activa
+                textGroup.visible = document.getElementById('start-screen').classList.contains('active');
             }
-        });
 
-        document.getElementById('tempo-input').addEventListener('blur', (e) => {
-            let newTempo = parseInt(e.target.value);
-            if (isNaN(newTempo) || newTempo < 40) newTempo = 40;
-            if (newTempo > 300) newTempo = 300;
-            e.target.value = newTempo;
-            TEMPO = newTempo;
-        });
+            for (let i = 0; i < particleCount; i++) {
+                const velocity = velocities[i];
 
-        // Funcionalidad "Drag to Change" para el BPM
-        let isDraggingTempo = false;
-        let startY = 0;
-        let startTempo = 130;
-        const tempoInput = document.getElementById('tempo-input');
-        const bpmLabel = document.querySelector('.bpm-control label');
+                // Get current position from instance matrix
+                instancedMesh.getMatrixAt(i, dummy.matrix);
+                dummy.position.setFromMatrixPosition(dummy.matrix);
 
-        const initTempoDrag = (e) => {
-            isDraggingTempo = true;
-            startY = e.clientY;
-            startTempo = parseInt(tempoInput.value) || 130;
-        };
+                velocity.history.unshift(dummy.position.clone());
+                if (velocity.history.length > trailLength) velocity.history.pop();
 
-        tempoInput.addEventListener('mousedown', initTempoDrag);
-        bpmLabel.addEventListener('mousedown', (e) => {
-            initTempoDrag(e);
-            e.preventDefault(); // Evitar selección de texto al arrastrar desde el label
-        });
+                // Update position
+                dummy.position.x += velocity.x;
+                dummy.position.y += velocity.y;
+                dummy.position.z += velocity.z;
 
-        document.addEventListener('mousemove', (e) => {
-            if (!isDraggingTempo) return;
-            const deltaY = startY - e.clientY; // Arriba es positivo, abajo es negativo
-            let newTempo = startTempo + Math.floor(deltaY / 2); // 2px de movimiento = 1 BPM (suavidad)
-            
-            if (newTempo < 40) newTempo = 40;
-            if (newTempo > 300) newTempo = 300;
-            
-            tempoInput.value = newTempo;
-            TEMPO = newTempo;
-        });
+                // Update color
+                const color = getParticleColor(velocity.colorType);
+                instancedMesh.setColorAt(i, color);
 
-        // Detener el modo de dibujo al soltar el clic del ratón en cualquier parte de la ventana
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            isDraggingTempo = false;
-        });
+                // Update trail
+                const trail = trails[i];
+                const trailPosAttr = trail.geometry.attributes.position;
+                const trailColorAttr = trail.geometry.attributes.color;
+                for (let j = 0; j < trailLength; j++) {
+                    const pos = velocity.history[j];
+                    if (pos) {
+                        trailPosAttr.array[j * 3] = pos.x;
+                        trailPosAttr.array[j * 3 + 1] = pos.y;
+                        trailPosAttr.array[j * 3 + 2] = pos.z;
+                        const alpha = Math.max(0.3, (trailLength - j) / trailLength); // Minimum alpha for more noticeable trails
+                        const trailColor = color.clone().multiplyScalar(alpha);
+                        trailColorAttr.array[j * 3] = trailColor.r;
+                        trailColorAttr.array[j * 3 + 1] = trailColor.g;
+                        trailColorAttr.array[j * 3 + 2] = trailColor.b;
+                    }
+                }
+                trailPosAttr.needsUpdate = true;
+                trailColorAttr.needsUpdate = true;
 
-        // Atajo de teclado: Barra espaciadora para Play/Pause
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                // Evitar que interfiera si el usuario tiene el foco en un input, select o botón
-                if (['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName)) return;
-                e.preventDefault(); // Evitar que la página haga scroll hacia abajo
-                document.getElementById('btn-play').click();
+                // Boundary
+                if (Math.abs(dummy.position.x) > 10) velocity.x *= -1;
+                if (Math.abs(dummy.position.y) > 10) velocity.y *= -1;
+                if (Math.abs(dummy.position.z) > 10) velocity.z *= -1;
+
+                // Update instance matrix
+                dummy.updateMatrix();
+                instancedMesh.setMatrixAt(i, dummy.matrix);
             }
-        });
 
-        // Iniciar interfaz
-        renderGrid();
+            instancedMesh.instanceMatrix.needsUpdate = true;
+            instancedMesh.instanceColor.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            updateTextScale();
+        });
     </script>
 </body>
 </html>
